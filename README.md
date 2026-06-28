@@ -11,21 +11,24 @@ Static site. Vanilla JS + Leaflet. Data is baked at build time from OpenStreetMa
 ## Run locally
 
 ```bash
-npx serve web        # serves http://localhost:3000
+npx serve            # serves http://localhost:3000
 ```
 
 Open in a browser. That's it — no `npm install` to use the site, the data files
 are committed.
+
+The deployed site lives at https://kmcnaught.github.io/thames-distance-calculator/
+(GitHub Pages, served from the repo root on `main`).
 
 ## Rebuild the data
 
 Requires Node 18+ (for native `fetch`). Run each script from the repo root:
 
 ```bash
-node scripts/build-thames.mjs        # → web/data/thames.json     (centreline, ~95 KiB)
-node scripts/build-launches.mjs      # → web/data/launches.json   (locks + slipways + put-ins)
-node scripts/build-campsites.mjs     # → web/data/campsites.json  (within 2 km of river)
-node scripts/build-parking.mjs       # → web/data/parking.json    (within 500 m of launches)
+node scripts/build-thames.mjs        # → data/thames.json     (centreline, ~95 KiB)
+node scripts/build-launches.mjs      # → data/launches.json   (locks + slipways + put-ins)
+node scripts/build-campsites.mjs     # → data/campsites.json  (within 2 km of river)
+node scripts/build-parking.mjs       # → data/parking.json    (within 500 m of launches)
 ```
 
 The thames build talks to the public Overpass API; expect 30–120 s per script.
@@ -62,10 +65,11 @@ Lock coordinates cross-checked against Environment Agency data (Open Government 
 ## Repo
 
 - `scripts/` — build pipeline. See `scripts/utils/README.md`.
-- `web/` — the deployable site (Leaflet from CDN; `web/lib/geo.mjs` is the
-  canonical snap/measure module, shared with build scripts).
+- `index.html`, `app.js`, `app.css` — the deployable site (Leaflet from CDN).
+- `lib/geo.mjs` — canonical snap/measure module, shared between the browser
+  app and the build scripts.
+- `data/` — baked OSM/EA inputs the site loads at runtime.
 - `THAMES_HANDOFF.md` — original carry-over notes that informed the design.
-- `/home/node/.claude/plans/compressed-growing-dolphin.md` — implementation plan.
 
 ## Known sharp edges
 
@@ -78,5 +82,3 @@ Lock coordinates cross-checked against Environment Agency data (Open Government 
 - The upstream terminus is whatever OSM's westmost `River Thames` endpoint
   resolves to — currently a node around Cricklade, slightly upstream of
   Lechlade. The "0 km" mark in the UI corresponds to that point.
-# thames-distance-calculator
-# thames-distance-calculator
