@@ -88,6 +88,23 @@
           <label class="check"><input id="find-need-park" type="checkbox" /> Require parking at put-in</label>
         </div>
 
+        <div class="field">
+          <label class="field-label">Relative to Oxford</label>
+          <div id="find-oxford-side" class="seg" role="radiogroup" aria-label="Direction relative to Oxford">
+            <button type="button" class="seg-btn active" data-side="any" role="radio" aria-checked="true">Any</button>
+            <button type="button" class="seg-btn" data-side="upstream" role="radio" aria-checked="false">Upstream</button>
+            <button type="button" class="seg-btn" data-side="downstream" role="radio" aria-checked="false">Downstream</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">
+            Trip end within
+            <output id="find-oxford-out" class="field-value">15 mi of Oxford</output>
+          </label>
+          <input id="find-oxford" type="range" min="0" max="50" step="0.5" value="15" />
+        </div>
+
         <div class="actions">
           <button id="btn-find" class="btn btn-primary">Find trips</button>
         </div>
