@@ -8,7 +8,7 @@ const ENDPOINTS = [
   'https://overpass.kumi.systems/api/interpreter',
 ];
 
-const UA = 'thalweg-build/0.1 (Thames trip planner)';
+const UA = 'thameswise-build/0.1 (Thames trip planner)';
 
 export async function overpass(query, { timeoutMs = 240_000 } = {}) {
   let lastErr;

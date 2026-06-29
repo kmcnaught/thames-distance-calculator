@@ -1,6 +1,6 @@
 # Build utilities
 
-Shared helpers for the Thalweg build pipeline. Per the global scripts policy: log every utility module here.
+Shared helpers for the Thameswise build pipeline. Per the global scripts policy: log every utility module here.
 
 | Module | Purpose |
 |---|---|
@@ -16,3 +16,5 @@ Build entrypoints live one level up in `scripts/`:
 | `build-launches.mjs` | 2 | EA AIMS + OSM slipways + put-ins → `data/launches.json` |
 | `build-campsites.mjs` | 3 | OSM `tourism=camp_site` within 2 km → `data/campsites.json` |
 | `build-parking.mjs` | 3 | OSM `amenity=parking` within 500 m of launches → `data/parking.json` |
+| `build-bridges.mjs` | 2 | OSM `highway+bridge=yes` intersecting the centreline → `data/bridges.json` (used as put-ins) |
+| `build-extras.mjs` | 2 | OSM piers, quays, weirs, ferry terminals snapped to the river → `data/extras.json` |

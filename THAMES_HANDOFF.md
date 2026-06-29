@@ -1,6 +1,6 @@
 # Thames on-river distance — build handoff
 
-A working prototype ("Thalweg") that measures the distance **along the river channel** between two
+A working prototype (originally "Thalweg", now "Thameswise") that measures the distance **along the river channel** between two
 points on the Thames, versus the straight line. This doc is the carry-over for a fresh, hosted static
 build. It records the data sources, the algorithm (validated), the stitching approach (needs live
 verification), what broke, and the recommended architecture for the rewrite.

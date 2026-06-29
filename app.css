@@ -1,4 +1,4 @@
-/* Thalweg — map-first layout. Panel docks bottom-right on desktop,
+/* Thameswise — map-first layout. Panel docks bottom-right on desktop,
    becomes a bottom sheet on narrow screens. */
 
 * { box-sizing: border-box; }
@@ -207,6 +207,31 @@ body {
   margin-left: 6px;
 }
 .results .badge.ok { background: #dcfce7; color: #166534; }
+.route-swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  margin-right: 6px;
+  vertical-align: -3px;
+}
+.route-chip {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 12px;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.4);
+}
 
 .hint {
   margin: 0 0 8px;
@@ -257,6 +282,7 @@ body {
   color: var(--ink-soft);
   margin-bottom: 12px;
 }
+.next-slot-hint { font-size: 11px; color: var(--ink-faint); }
 .pin-chip {
   display: inline-flex;
   align-items: center;
@@ -267,7 +293,10 @@ body {
   font-weight: 700;
   font-size: 12px;
   line-height: 1;
+  cursor: pointer;
+  user-select: none;
 }
+.pin-chip:hover { filter: brightness(1.1); }
 .pin-chip.pin-a { background: var(--pin-a); }
 .pin-chip.pin-b { background: var(--pin-b); }
 

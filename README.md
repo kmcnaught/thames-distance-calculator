@@ -1,4 +1,4 @@
-# Thalweg
+# Thameswise
 
 On-river distance + trip planner for the non-tidal Thames (Lechlade → Teddington).
 Click two spots on a map, see the channel-following distance. Or open "Find trips"
@@ -29,6 +29,8 @@ node scripts/build-thames.mjs        # → data/thames.json     (centreline, ~95
 node scripts/build-launches.mjs      # → data/launches.json   (locks + slipways + put-ins)
 node scripts/build-campsites.mjs     # → data/campsites.json  (within 2 km of river)
 node scripts/build-parking.mjs       # → data/parking.json    (within 500 m of launches)
+node scripts/build-bridges.mjs       # → data/bridges.json    (road bridges crossing the river)
+node scripts/build-extras.mjs        # → data/extras.json     (piers, quays, weirs, ferry terminals)
 ```
 
 The thames build talks to the public Overpass API; expect 30–120 s per script.

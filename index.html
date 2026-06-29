@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0b3a5c" />
-  <title>Thalweg — on-river distance, Thames</title>
+  <title>Thameswise — on-river distance, Thames</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <link rel="stylesheet" href="./app.css" />
@@ -13,7 +13,7 @@
   <div id="map" aria-label="Thames map"></div>
 
   <header id="brand" aria-hidden="false">
-    <span class="brand-mark">Thalweg</span>
+    <span class="brand-mark">Thameswise</span>
     <span class="brand-sub">on-river distance · Thames</span>
   </header>
 
@@ -31,17 +31,17 @@
       </nav>
 
       <section id="tab-measure" class="tab-panel active" role="tabpanel">
-        <p id="hint" class="hint">Tap the map to drop pin A.</p>
+        <p id="hint" class="hint">Double-tap the map to drop pin A.</p>
 
         <div id="readout" class="readout" hidden>
           <div class="distance">
-            <span id="dist-km" class="dist-km">—</span>
-            <span class="dist-unit">km on the river</span>
+            <span id="dist-primary" class="dist-km">—</span>
+            <span id="dist-primary-unit" class="dist-unit">mi on the river</span>
           </div>
           <div class="distance-secondary">
-            <span id="dist-mi">— mi</span>
+            <span id="dist-secondary">— km</span>
             <span class="sep">·</span>
-            <span id="dist-straight">— km straight</span>
+            <span id="dist-straight">— straight</span>
             <span class="sep">·</span>
             <span id="sinuosity">sinuosity —</span>
           </div>
@@ -50,7 +50,8 @@
 
         <div class="next-slot">
           <span>Next pin:</span>
-          <span id="next-slot-label" class="pin-chip pin-a">A</span>
+          <span id="next-slot-label" class="pin-chip pin-a" title="Tap to switch which pin moves next">A</span>
+          <span class="next-slot-hint">(tap to switch)</span>
         </div>
 
         <div class="actions">
@@ -58,6 +59,8 @@
           <button id="btn-clear" class="btn" disabled>Clear</button>
           <button id="btn-share" class="btn btn-primary" disabled>Share link</button>
         </div>
+
+        <label class="check"><input id="units-km" type="checkbox" /> Show distances in km (default: miles)</label>
       </section>
 
       <section id="tab-find" class="tab-panel" role="tabpanel" hidden>
