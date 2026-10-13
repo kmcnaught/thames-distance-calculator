@@ -1,0 +1,210 @@
+{
+  "town:Oxford": [
+    186.38,
+    94.23
+  ],
+  "lock:Culham Lock": [
+    179,
+    137.75
+  ],
+  "lock:Clifton Lock": [
+    182.76,
+    133.85
+  ],
+  "lock:Day's Lock": [
+    197.2,
+    142.15
+  ],
+  "lock:Cleeve Lock": [
+    202.25,
+    182.49
+  ],
+  "lock:Whitchurch Lock": [
+    224.56,
+    194.03
+  ],
+  "lock:Caversham Lock": [
+    250.73,
+    203.44
+  ],
+  "lock:Shiplake Lock": [
+    263.14,
+    191.22
+  ],
+  "lock:Hambledon Lock": [
+    271.3,
+    167.26
+  ],
+  "town:Henley-on-Thames": [
+    230.89,
+    177.68
+  ],
+  "lock:Hurley Lock": [
+    287.09,
+    175.32
+  ],
+  "lock:Temple Lock": [
+    296.48,
+    173.14
+  ],
+  "lock:Boulters Lock Lower Gate": [
+    314.72,
+    178.89
+  ],
+  "lock:Cookham Lock": [
+    318.46,
+    166.06
+  ],
+  "lock:Bray Lock": [
+    312.2,
+    191
+  ],
+  "lock:Romney Lock": [
+    336.94,
+    193.93
+  ],
+  "town:Windsor": [
+    332.57,
+    202.83
+  ],
+  "off-town:Slough": [
+    338.36,
+    185.2
+  ],
+  "lock:Bell Weir Lock": [
+    354.64,
+    212.49
+  ],
+  "lock:Chertsey Lock": [
+    364.49,
+    231.99
+  ],
+  "lock:Shepperton Lock": [
+    377.59,
+    239.01
+  ],
+  "town:Weybridge": [
+    370.54,
+    244.42
+  ],
+  "lock:Sunbury Lock": [
+    386.06,
+    231.5
+  ],
+  "town:Kingston": [
+    404.74,
+    230.72
+  ],
+  "tributary:Mole": [
+    393.76,
+    239.57
+  ],
+  "tributary:Wey": [
+    369.48,
+    261.75
+  ],
+  "lock:Molesey Lock": [
+    397.02,
+    224.61
+  ],
+  "lock:Northmoor Lock": [
+    161.31,
+    109.62
+  ],
+  "lock:Pinkhill Lock": [
+    157.2,
+    92.55
+  ],
+  "lock:Grafton Lock": [
+    99.89,
+    122.36
+  ],
+  "lock:St.John's Lock": [
+    85.52,
+    117.23
+  ],
+  "lock:Inglesham Lock": [
+    63.14,
+    108.11
+  ],
+  "lock:Rushey Lock": [
+    115.69,
+    119.33
+  ],
+  "lock:Shifford Lock": [
+    121.22,
+    110.86
+  ],
+  "lock:Eynsham Lock": [
+    154.78,
+    84.38
+  ],
+  "lock:Godstow Lock": [
+    171.26,
+    84.82
+  ],
+  "lock:Osney Lock": [
+    171.27,
+    96.65
+  ],
+  "hill:Berkshire Downs": [
+    151.55,
+    195.58
+  ],
+  "county:Wiltshire": [
+    66.24,
+    214.83
+  ],
+  "hill:Chiltern Hills": [
+    305.84,
+    119.06
+  ],
+  "county:Hertfordshire": [
+    391.58,
+    104.26
+  ],
+  "county:Buckinghamshire": [
+    273.16,
+    44.9
+  ],
+  "county:Oxfordshire": [
+    171.68,
+    39.3
+  ],
+  "county:Gloucestershire": [
+    37.09,
+    67.16
+  ],
+  "hill:Cotswolds": [
+    103.32,
+    54.59
+  ],
+  "hill:Surrey Hills": [
+    341.04,
+    253.75
+  ],
+  "town:Pangbourne": [
+    217.98,
+    199.14
+  ],
+  "town:Goring": [
+    211.35,
+    181.64
+  ],
+  "town:Wallingford": [
+    209.75,
+    153.6
+  ],
+  "town:Cricklade": [
+    31.98,
+    141.4
+  ],
+  "county:Surrey": [
+    328.44,
+    268.24
+  ],
+  "county:Hampshire": [
+    223.29,
+    283.68
+  ]
+}

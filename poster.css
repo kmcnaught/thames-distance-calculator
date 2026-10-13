@@ -1,0 +1,102 @@
+html, body { margin: 0; padding: 0; height: 100%; background: #e8e4d8; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #2a2a2a; }
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 16px;
+  background: #f6efe1;
+  border-bottom: 1px solid #d8d0bd;
+  flex-wrap: wrap;
+  position: sticky; top: 0; z-index: 10;
+}
+.toolbar .brand { display: flex; flex-direction: column; line-height: 1.1; }
+.toolbar .brand strong { font-size: 15px; letter-spacing: 0.5px; }
+.toolbar .brand span { font-size: 11px; color: #7a7062; }
+
+.picker { display: flex; gap: 14px; align-items: center; }
+.picker label {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.55);
+  padding: 4px 8px; border-radius: 6px;
+  border: 1px solid #d8d0bd;
+}
+.picker .swatch {
+  display: inline-block; width: 16px; height: 16px; border-radius: 3px;
+  border: 1px solid rgba(0,0,0,0.15);
+}
+.picker input[type=color] {
+  width: 26px; height: 22px; border: none; background: transparent; padding: 0; cursor: pointer;
+}
+.picker input[type=text] {
+  border: none; background: transparent; font: inherit; font-size: 13px; width: 130px;
+  border-bottom: 1px dashed #b8ada0;
+  padding: 2px 0;
+}
+.picker input[type=text]:focus { outline: none; border-bottom-color: #2a2a2a; }
+
+.actions { margin-left: auto; display: flex; gap: 8px; }
+.actions button {
+  font: inherit; font-size: 13px;
+  padding: 6px 12px;
+  background: #fff;
+  border: 1px solid #cfc7b3;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.actions button:hover { background: #faf6ea; }
+.actions button.danger { color: #8a2a1a; }
+
+.poster-host {
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+}
+.poster-host svg {
+  width: 100%;
+  max-width: 1600px;
+  height: auto;
+  background: #f6efe1;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  display: block;
+}
+.poster-host .ribbon:hover { filter: brightness(0.85); }
+.poster-host [data-label-id] {
+  cursor: grab;
+}
+.poster-host [data-label-id].dragging {
+  cursor: grabbing;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35));
+}
+
+#layers {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  background: rgba(246, 239, 225, 0.95);
+  border: 1px solid #d8d0bd;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  z-index: 20;
+}
+#layers .layers-title {
+  font-size: 11px;
+  color: #7a7062;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+#layers label { display: block; cursor: pointer; user-select: none; }
+#layers input { margin-right: 5px; vertical-align: middle; }
+
+/* Print: full page, no UI, single sheet A3 landscape. */
+@media print {
+  @page { size: A3 landscape; margin: 0; }
+  html, body { background: #f6efe1; }
+  .toolbar, #layers { display: none; }
+  .poster-host { padding: 0; }
+  .poster-host svg { max-width: none; width: 100%; height: 100vh; box-shadow: none; }
+}

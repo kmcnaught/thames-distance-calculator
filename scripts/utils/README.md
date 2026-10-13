@@ -18,3 +18,9 @@ Build entrypoints live one level up in `scripts/`:
 | `build-parking.mjs` | 3 | OSM `amenity=parking` within 500 m of launches → `data/parking.json` |
 | `build-bridges.mjs` | 2 | OSM `highway+bridge=yes` intersecting the centreline → `data/bridges.json` (used as put-ins) |
 | `build-extras.mjs` | 2 | OSM piers, quays, weirs, ferry terminals snapped to the river → `data/extras.json` |
+| `build-tributaries.mjs` | 2 | OSM named rivers (Cherwell, Kennet, Wey, Mole) + K&A Canal, bbox-clipped, stitched → `data/tributaries.json`. Named rivers get a straight-line stub to their confluence if they end short; canals do not. |
+| `build-hills.mjs` | 2 | OSM AONBs ("National Landscape") relations — Cotswolds, Chilterns, North Wessex Downs, Surrey Hills — outer rings simplified → `data/hills.json` |
+| `build-counties.mjs` | 2 | OSM `admin_level=6` ceremonial counties around the Thames corridor → `data/counties.json` (dashed boundary lines on the poster) |
+| `build-town-boundaries.mjs` | 2 | OSM `landuse=residential` polygons per town, buffered + unioned via `polygon-clipping` into coalesced blobs (fewer bigger shapes than individual neighbourhoods) → `data/town-boundaries.json`. Also stores a convex hull as fallback. |
+| `build-poster.mjs` | 4 | Assembles the A3 colouring poster SVG from the above baked data → `poster.svg`. Depends on Thames, launches, tributaries, hills, counties, and (optional) town-boundaries. |
+| `fetch-missing-towns.mjs` | ad-hoc | Re-fetches only the named towns from `build-town-boundaries.mjs` and merges into `data/town-boundaries.json`. Use when a full run leaves 5xx failures behind. |

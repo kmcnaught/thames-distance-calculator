@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Thames Path — Colouring Poster</title>
+  <link rel="stylesheet" href="poster.css">
+</head>
+<body>
+  <header class="toolbar">
+    <div class="brand">
+      <strong>Thames Path</strong>
+      <span>colouring poster</span>
+    </div>
+
+    <div class="picker">
+      <label>
+        <span class="swatch" id="swatch-a"></span>
+        <input type="color" id="colour-a" value="#c04b3a" title="Ribbon A colour">
+        <input type="text" id="label-a" placeholder="e.g. walking" maxlength="20">
+      </label>
+      <label>
+        <span class="swatch" id="swatch-b"></span>
+        <input type="color" id="colour-b" value="#2d6b8c" title="Ribbon B colour">
+        <input type="text" id="label-b" placeholder="e.g. paddling" maxlength="20">
+      </label>
+    </div>
+
+    <div class="actions">
+      <button type="button" id="btn-download">Download SVG</button>
+      <button type="button" id="btn-print">Print</button>
+      <button type="button" id="btn-export-labels" title="Download label position overrides for baking into the next build">Export label tweaks</button>
+      <button type="button" id="btn-reset" class="danger">Reset</button>
+    </div>
+  </header>
+
+  <main id="poster-host" class="poster-host"></main>
+
+  <aside id="layers">
+    <div class="layers-title">Layers</div>
+    <label><input type="checkbox" data-layer="hills" checked> Hills</label>
+    <label><input type="checkbox" data-layer="tributaries" checked> Tributaries</label>
+    <label><input type="checkbox" data-layer="canals" checked> Canals</label>
+    <label><input type="checkbox" data-layer="town-areas" checked> Town areas</label>
+    <label><input type="checkbox" data-layer="off-town-areas" checked> Off-river towns</label>
+    <label><input type="checkbox" data-layer="counties" checked> Counties</label>
+    <label><input type="checkbox" data-layer="lock-labels" checked> Lock labels</label>
+  </aside>
+
+  <script src="poster.js" type="module"></script>
+</body>
+</html>
