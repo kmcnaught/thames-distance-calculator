@@ -3,6 +3,8 @@
 // iterate. URL state (?a=lat,lng&b=lat,lng) is the share format.
 
 import { snap, measure, reachPts, haversine } from './lib/geo.mjs';
+import { mergeWaymarks } from './lib/waymarks.mjs';
+import { initStrip } from './strip.js';
 
 const M_PER_MILE = 1609.344;
 const D2R = Math.PI / 180;
@@ -18,6 +20,9 @@ const SLIDER_RANGES = {
   findTarget: { mi: [3, 25, 0.5, 8],   km: [5, 40, 0.5, 13] },
   findTol:    { mi: [0, 5, 0.5, 1.5],  km: [0, 8, 0.5, 2.5] },
   findWalk:   { mi: [0, 2, 0.1, 0.6],  km: [0, 3, 0.25, 1.0] },
+  // Distance from Oxford to the nearer of the trip's two ends. Max is large
+  // enough to act as "no limit" in practice (the navigable Thames is ~140 mi).
+  findOxford: { mi: [0, 80, 1,   15],  km: [0, 130, 1, 25] },
 };
 
 const OVERLAY_PALETTE = [
@@ -52,14 +57,21 @@ const els = {
   panelToggle: document.getElementById('panel-toggle'),
   toast: document.getElementById('toast'),
   tabs: document.querySelectorAll('.tab'),
-  tabPanels: { measure: document.getElementById('tab-measure'), find: document.getElementById('tab-find') },
+  tabPanels: {
+    measure: document.getElementById('tab-measure'),
+    find:    document.getElementById('tab-find'),
+    strip:   document.getElementById('tab-strip'),
+  },
   findTarget: document.getElementById('find-target'),
   findTol: document.getElementById('find-tol'),
   findWalk: document.getElementById('find-walk'),
+  findOxford: document.getElementById('find-oxford'),
+  findOxfordSide: document.getElementById('find-oxford-side'),
   findNeedCamp: document.getElementById('find-need-camp'),
   findNeedPark: document.getElementById('find-need-park'),
   findDistOut: document.getElementById('find-dist-out'),
   findWalkOut: document.getElementById('find-walk-out'),
+  findOxfordOut: document.getElementById('find-oxford-out'),
   btnFind: document.getElementById('btn-find'),
   findResults: document.getElementById('find-results'),
   findSummary: document.getElementById('find-summary'),
@@ -155,8 +167,20 @@ function pinIcon(letter, color) {
 
 const PIN_COLOR = { A: '#0b3a5c', B: '#c45c3f' };
 
-map.on('dblclick', (e) => {
-  setPin(state.next, [e.latlng.lat, e.latlng.lng]);
+// Manual double-tap detector. Leaflet's dblclick is unreliable on iOS Safari —
+// the second tap is often consumed by the OS even with doubleClickZoom off.
+// Two click events within 350 ms / 30 px works uniformly for mouse and touch.
+let lastTap = { t: 0, x: 0, y: 0 };
+map.on('click', (e) => {
+  const now = Date.now();
+  const dx = e.containerPoint.x - lastTap.x;
+  const dy = e.containerPoint.y - lastTap.y;
+  if (now - lastTap.t < 350 && Math.hypot(dx, dy) < 30) {
+    setPin(state.next, [e.latlng.lat, e.latlng.lng]);
+    lastTap = { t: 0, x: 0, y: 0 };
+    return;
+  }
+  lastTap = { t: now, x: e.containerPoint.x, y: e.containerPoint.y };
 });
 
 function setPin(slot, latlng) {
@@ -389,13 +413,31 @@ function updateFindLabels() {
   const tol = parseFloat(els.findTol.value);
   els.findDistOut.textContent = `${target} ${lbl} ± ${tol} ${lbl}`;
   els.findWalkOut.textContent = `${parseFloat(els.findWalk.value).toFixed(u === 'mi' ? 1 : 2)} ${lbl}`;
+  const ox = parseFloat(els.findOxford.value);
+  const oxMax = parseFloat(els.findOxford.max);
+  els.findOxfordOut.textContent = ox >= oxMax ? 'any distance from Oxford' : `${ox} ${lbl} of Oxford`;
 }
 els.findTarget.addEventListener('input', updateFindLabels);
 els.findTol.addEventListener('input', updateFindLabels);
 els.findWalk.addEventListener('input', updateFindLabels);
+els.findOxford.addEventListener('input', updateFindLabels);
 els.findNeedCamp.addEventListener('change', () => {
   els.findWalk.disabled = !els.findNeedCamp.checked;
 });
+
+// 'any' | 'upstream' | 'downstream' — bound to the segmented control. Upstream
+// means both ends of the trip are upstream of Sandford Lock (lower along_m).
+let oxfordSide = 'any';
+for (const btn of els.findOxfordSide.querySelectorAll('.seg-btn')) {
+  btn.addEventListener('click', () => {
+    oxfordSide = btn.dataset.side;
+    for (const b of els.findOxfordSide.querySelectorAll('.seg-btn')) {
+      const active = b === btn;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-checked', active ? 'true' : 'false');
+    }
+  });
+}
 
 els.unitsKm.addEventListener('change', () => {
   try { localStorage.setItem('thameswise.unitsKm', els.unitsKm.checked ? '1' : '0'); } catch {}
@@ -422,6 +464,13 @@ function runFinder() {
   const minM = (target - tol) / factor;
   const maxM = (target + tol) / factor;
   const walkM = walk / factor;
+  const oxfordMax = parseFloat(els.findOxford.value);
+  const oxfordSliderMax = parseFloat(els.findOxford.max);
+  const oxfordCapM = oxfordMax >= oxfordSliderMax ? Infinity : oxfordMax / factor;
+  // Oxford filters need a reference; if launches.json didn't yield Sandford,
+  // skip those filters entirely rather than silently dropping every result.
+  const sandford = state.sandfordM;
+  const oxfordReady = sandford != null;
 
   const putIns = state.putIns;
   const campsites = state.campsites?.campsites || [];
@@ -435,6 +484,16 @@ function runFinder() {
       const d = B.along_m - A.along_m;
       if (d < minM) continue;
       if (d > maxM) break;
+      if (oxfordReady) {
+        if (oxfordSide === 'upstream' && B.along_m > sandford) continue;
+        if (oxfordSide === 'downstream' && A.along_m < sandford) continue;
+        // Trip's nearest along-river point to Oxford: 0 if it straddles Sandford.
+        const nearestOx =
+          A.along_m <= sandford && sandford <= B.along_m
+            ? 0
+            : Math.min(Math.abs(A.along_m - sandford), Math.abs(B.along_m - sandford));
+        if (nearestOx > oxfordCapM) continue;
+      }
       let nearestCamp = null;
       if (needCamp) {
         let bestD = Infinity;
@@ -798,13 +857,15 @@ function buildPutIns() {
 
 // Boot
 (async () => {
-  const [thamesRes, launchesRes, campsitesRes, parkingRes, bridgesRes, extrasRes] = await Promise.all([
+  const [thamesRes, launchesRes, campsitesRes, parkingRes, bridgesRes, extrasRes, curatedRes, transportRes] = await Promise.all([
     fetch('./data/thames.json'),
     fetch('./data/launches.json').catch(() => null),
     fetch('./data/campsites.json').catch(() => null),
     fetch('./data/parking.json').catch(() => null),
     fetch('./data/bridges.json').catch(() => null),
     fetch('./data/extras.json').catch(() => null),
+    fetch('./data/curated-waypoints.json').catch(() => null),
+    fetch('./data/curated-transport.json').catch(() => null),
   ]);
   state.thames = await thamesRes.json();
   // Render the centreline subtly so the user sees the navigable channel.
@@ -844,6 +905,28 @@ function buildPutIns() {
   renderBridges();
   renderExtras();
   buildPutIns();
+
+  // Strip view — merges curated + locks + transport, mounts the vertical
+  // 1D projection in #tab-strip. Only initialises if the curated data loaded.
+  if (curatedRes && curatedRes.ok && launchesRes && launchesRes.ok) {
+    const curated = await curatedRes.json();
+    const transport = transportRes && transportRes.ok ? await transportRes.json() : { transport: [] };
+    const waymarks = mergeWaymarks({ curated, transport, launches: state.launches });
+    const totalRiverM = state.thames.cum[state.thames.cum.length - 1];
+    state.stripController = initStrip({
+      container: els.tabPanels.strip,
+      waymarks,
+      totalRiverM,
+      onFocusRiver: (latlng /* [lat, lng] */) => {
+        // Pan the map and drop a transient marker at the tapped waymark.
+        map.panTo(latlng, { animate: true });
+        if (state.layers.stripFocus) map.removeLayer(state.layers.stripFocus);
+        state.layers.stripFocus = L.circleMarker(latlng, {
+          radius: 7, color: '#0b3a5c', fillColor: '#facc15', fillOpacity: 0.9, weight: 2,
+        }).addTo(map);
+      },
+    });
+  }
 
   parseUrl();
 })();

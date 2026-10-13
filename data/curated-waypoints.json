@@ -1,0 +1,1428 @@
+{
+  "source": "https://walkthethames.co.uk/thames-path-distances/",
+  "extracted": "2026-08-24",
+  "note": "Settlements, landmarks, locks and named bridges from the walkthethames guide, source → Teddington (~152 miles). This is our curated whitelist of 'sensible waypoints' along the river — the strip view surfaces these plus locks from launches.json. Amenity fields join with data/curated-transport.json by 'name' → transport is not duplicated here.",
+  "caveats": {
+    "tier_is_soft": "The tier field ('major' vs 'minor') is the summariser's read of the guide's editorial styling — bold text, phrases like 'grand town' or 'busy place', amount of description. Two extraction passes disagreed on a handful (Purley on Thames, Bourne End, Teddington, Kingston). Trust the field for a broad-brush filter but expect to override individual entries by hand.",
+    "kind_is_soft": "Similarly the kind classification (town/village/hamlet/lock/bridge/landmark) is a best-fit from the summariser. Some entries could plausibly go either way — 'Radley Boat House' as landmark, 'Hampton Court' as landmark rather than town.",
+    "amenity_nulls": "Amenity booleans are true ONLY where the guide's prose explicitly mentions it. null means the guide is silent, NOT that the amenity is absent. Reading, Kingston, Windsor etc. obviously have pubs/shops/cafés but the guide's short description didn't itemise them, so they're null here. If you want a definitive 'has X within Y metres', use OSM as a supplemental layer.",
+    "path_mi_vs_river": "path_mi is walker's distance along the Thames Path from source. It is NOT the same as our along_m (paddler's distance along the river centreline). resolve-curated.mjs will attach along_m by snapping each waypoint's OSM coordinates to the centreline."
+  },
+  "schema": {
+    "name": "as-written in the guide",
+    "path_mi": "distance from source along the Thames Path",
+    "tier": "major | minor",
+    "kind": "town | village | hamlet | lock | bridge | landmark",
+    "amenities": {
+      "pub": "true | null",
+      "cafe": "true | null",
+      "shop": "true | null",
+      "camping": "true | null",
+      "toilets": "true | null",
+      "boat_hire": "true | null"
+    },
+    "quoted_amenities": "the exact phrase from the guide that justified any true flags (empty string if all null)"
+  },
+  "waypoints": [
+    {
+      "name": "Source",
+      "path_mi": 0,
+      "tier": "minor",
+      "kind": "landmark",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.6939,
+      "lng": -2.027,
+      "along_m": 0,
+      "offset_m": 7074,
+      "side": "R"
+    },
+    {
+      "name": "Somerford Keynes",
+      "path_mi": 4.3,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "pub: the Bakers Arms",
+      "lat": 51.6543963,
+      "lng": -1.972207,
+      "along_m": 0,
+      "offset_m": 1275,
+      "side": "L"
+    },
+    {
+      "name": "Ashton Keynes",
+      "path_mi": 6.8,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": true,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "shop and a pub",
+      "lat": 51.6453991,
+      "lng": -1.9311453,
+      "along_m": 2737,
+      "offset_m": 707,
+      "side": "L"
+    },
+    {
+      "name": "Water Hay Car Park",
+      "path_mi": 8.1,
+      "tier": "minor",
+      "kind": "landmark",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.6444,
+      "lng": -1.9124,
+      "along_m": 5174,
+      "offset_m": 601,
+      "side": "L"
+    },
+    {
+      "name": "Cricklade",
+      "path_mi": 12.2,
+      "tier": "major",
+      "kind": "town",
+      "amenities": {
+        "pub": true,
+        "cafe": true,
+        "shop": true,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "pubs with rooms, takeaways, grocery stores, and cafes",
+      "lat": 51.6414188,
+      "lng": -1.8579414,
+      "along_m": 10177,
+      "offset_m": 380,
+      "side": "R"
+    },
+    {
+      "name": "Castle Eaton",
+      "path_mi": 16.5,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "Red Lion pub",
+      "lat": 51.6601737,
+      "lng": -1.7909547,
+      "along_m": 17089,
+      "offset_m": 138,
+      "side": "R"
+    },
+    {
+      "name": "Hannington Bridge",
+      "path_mi": 18.6,
+      "tier": "minor",
+      "kind": "bridge",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.65553,
+      "lng": -1.752,
+      "along_m": 20998,
+      "offset_m": 746,
+      "side": "R"
+    },
+    {
+      "name": "Lechlade",
+      "path_mi": 23,
+      "tier": "major",
+      "kind": "town",
+      "amenities": {
+        "pub": true,
+        "cafe": true,
+        "shop": true,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "pubs, restaurants, cafes and shops",
+      "lat": 51.6944942,
+      "lng": -1.6922057,
+      "along_m": 27991,
+      "offset_m": 217,
+      "side": "L"
+    },
+    {
+      "name": "Buscot",
+      "path_mi": 24.9,
+      "tier": "minor",
+      "kind": "landmark",
+      "amenities": {
+        "pub": null,
+        "cafe": true,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "tea room",
+      "lat": 51.6844,
+      "lng": -1.6614,
+      "along_m": 31497,
+      "offset_m": 322,
+      "side": "L"
+    },
+    {
+      "name": "Kelmscott",
+      "path_mi": 26.7,
+      "tier": "minor",
+      "kind": "hamlet",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.6897332,
+      "lng": -1.6398141,
+      "along_m": 33566,
+      "offset_m": 329,
+      "side": "L"
+    },
+    {
+      "name": "Radcot Bridge",
+      "path_mi": 29.4,
+      "tier": "minor",
+      "kind": "bridge",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "Ye Olde Swan offers food and drink",
+      "lat": 51.69267,
+      "lng": -1.5882,
+      "along_m": 38068,
+      "offset_m": 88,
+      "side": "R"
+    },
+    {
+      "name": "Tadpole Bridge",
+      "path_mi": 33.4,
+      "tier": "minor",
+      "kind": "bridge",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "The Trout is your only source of refreshment",
+      "lat": 51.70123,
+      "lng": -1.51743,
+      "along_m": 44693,
+      "offset_m": 32,
+      "side": "R"
+    },
+    {
+      "name": "Shifford Lock",
+      "path_mi": 36.7,
+      "tier": "minor",
+      "kind": "lock",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.70722264929878,
+      "lng": -1.46425022858905,
+      "along_m": 51486,
+      "offset_m": 67,
+      "side": "L"
+    },
+    {
+      "name": "Newbridge",
+      "path_mi": 39.4,
+      "tier": "minor",
+      "kind": "bridge",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "2 pubs here: The Rose Revived and The Maybush",
+      "lat": 51.70983982187882,
+      "lng": -1.417210434528585,
+      "along_m": 55716,
+      "offset_m": 0,
+      "side": "C"
+    },
+    {
+      "name": "Northmoor Lock",
+      "path_mi": 41.6,
+      "tier": "minor",
+      "kind": "lock",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": true,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "campsite (Barefoot Campsite)",
+      "lat": 51.7162841185779,
+      "lng": -1.3768919336325627,
+      "along_m": 59225,
+      "offset_m": 2,
+      "side": "L"
+    },
+    {
+      "name": "Bablock Hythe",
+      "path_mi": 43.1,
+      "tier": "minor",
+      "kind": "landmark",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "Ferryman's Inn",
+      "lat": 51.7396,
+      "lng": -1.3785,
+      "along_m": 62125,
+      "offset_m": 378,
+      "side": "L"
+    },
+    {
+      "name": "Pinkhill",
+      "path_mi": 45.9,
+      "tier": "minor",
+      "kind": "lock",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.76126948408625,
+      "lng": -1.3628988294117423,
+      "along_m": 65543,
+      "offset_m": 1,
+      "side": "L"
+    },
+    {
+      "name": "Swinford Bridge",
+      "path_mi": 46.9,
+      "tier": "minor",
+      "kind": "bridge",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.77440814295712,
+      "lng": -1.3592202007038698,
+      "along_m": 67546,
+      "offset_m": 0,
+      "side": "L"
+    },
+    {
+      "name": "Godstow Bridge",
+      "path_mi": 50.5,
+      "tier": "minor",
+      "kind": "bridge",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "The Trout",
+      "lat": 51.77948760674513,
+      "lng": -1.2998123491192046,
+      "along_m": 73528,
+      "offset_m": 0,
+      "side": "R"
+    },
+    {
+      "name": "Osney Bridge, Oxford",
+      "path_mi": 52.9,
+      "tier": "major",
+      "kind": "town",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.75256,
+      "lng": -1.27263,
+      "along_m": 77361,
+      "offset_m": 6,
+      "side": "R"
+    },
+    {
+      "name": "Folly Bridge, Oxford",
+      "path_mi": 54,
+      "tier": "major",
+      "kind": "bridge",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.74634264270051,
+      "lng": -1.2563223543628665,
+      "along_m": 79092,
+      "offset_m": 0,
+      "side": "R"
+    },
+    {
+      "name": "Donnington Bridge",
+      "path_mi": 55,
+      "tier": "minor",
+      "kind": "bridge",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.73562343331618,
+      "lng": -1.241991556239852,
+      "along_m": 80694,
+      "offset_m": 0,
+      "side": "R"
+    },
+    {
+      "name": "Iffley Lock",
+      "path_mi": 55.4,
+      "tier": "minor",
+      "kind": "lock",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.72925779725847,
+      "lng": -1.2401579589485991,
+      "along_m": 81422,
+      "offset_m": 0,
+      "side": "R"
+    },
+    {
+      "name": "Sandford Lock",
+      "path_mi": 57.1,
+      "tier": "minor",
+      "kind": "lock",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "pubs, The Trout being the nearest",
+      "lat": 51.70828648631708,
+      "lng": -1.2328289226508022,
+      "along_m": 84122,
+      "offset_m": 0,
+      "side": "L"
+    },
+    {
+      "name": "Radley Boat House",
+      "path_mi": 58.8,
+      "tier": "minor",
+      "kind": "landmark",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.6871,
+      "lng": -1.2323,
+      "along_m": 86772,
+      "offset_m": 711,
+      "side": "R"
+    },
+    {
+      "name": "Abingdon",
+      "path_mi": 62.5,
+      "tier": "major",
+      "kind": "town",
+      "amenities": {
+        "pub": true,
+        "cafe": true,
+        "shop": true,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "shops, hotels, restaurants, bars and cafes",
+      "lat": 51.6714842,
+      "lng": -1.2779715,
+      "along_m": 92072,
+      "offset_m": 261,
+      "side": "R"
+    },
+    {
+      "name": "Culham Old Bridge",
+      "path_mi": 63.4,
+      "tier": "minor",
+      "kind": "bridge",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.6585,
+      "lng": -1.27731,
+      "along_m": 93744,
+      "offset_m": 73,
+      "side": "L"
+    },
+    {
+      "name": "Culham Lock",
+      "path_mi": 64.7,
+      "tier": "minor",
+      "kind": "lock",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.64972617488789,
+      "lng": -1.2658982438864586,
+      "along_m": 96367,
+      "offset_m": 136,
+      "side": "L"
+    },
+    {
+      "name": "Clifton Hampden",
+      "path_mi": 67.9,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": true,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "general stores, Barley Mow serves meals",
+      "lat": 51.6575408,
+      "lng": -1.2106403,
+      "along_m": 102639,
+      "offset_m": 232,
+      "side": "L"
+    },
+    {
+      "name": "Days Lock/Little Wittenham",
+      "path_mi": 70.3,
+      "tier": "minor",
+      "kind": "lock",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.63842852848241,
+      "lng": -1.1798838973465227,
+      "along_m": 106648,
+      "offset_m": 42,
+      "side": "L"
+    },
+    {
+      "name": "Dorchester",
+      "path_mi": 71,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": true,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "pubs serving food and a co-op",
+      "lat": 51.6439528,
+      "lng": -1.1660219,
+      "along_m": 106029,
+      "offset_m": 792,
+      "side": "L"
+    },
+    {
+      "name": "Shillingford",
+      "path_mi": 72.9,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": null,
+        "cafe": true,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "Shillingford Bridge Hotel for afternoon tea",
+      "lat": 51.6300512,
+      "lng": -1.1400984,
+      "along_m": 110327,
+      "offset_m": 344,
+      "side": "L"
+    },
+    {
+      "name": "Benson",
+      "path_mi": 73.9,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": true,
+        "cafe": true,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": true
+      },
+      "quoted_amenities": "Waterfront Cafe serves food, pubs and takeaways",
+      "lat": 51.6211826,
+      "lng": -1.1084793,
+      "along_m": 112764,
+      "offset_m": 524,
+      "side": "L"
+    },
+    {
+      "name": "Wallingford",
+      "path_mi": 75.7,
+      "tier": "major",
+      "kind": "town",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": true,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "hotels, pubs, restaurants and shops",
+      "lat": 51.5982886,
+      "lng": -1.1251402,
+      "along_m": 115331,
+      "offset_m": 267,
+      "side": "R"
+    },
+    {
+      "name": "Cholsey",
+      "path_mi": 78.4,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": true,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "pub and a Tesco Express",
+      "lat": 51.5751616,
+      "lng": -1.1535181,
+      "along_m": 119649,
+      "offset_m": 1668,
+      "side": "R"
+    },
+    {
+      "name": "Moulsford",
+      "path_mi": 80.2,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "Beetle and Wedge, petrol station",
+      "lat": 51.551939,
+      "lng": -1.1496589,
+      "along_m": 121099,
+      "offset_m": 180,
+      "side": "R"
+    },
+    {
+      "name": "Goring & Streatley",
+      "path_mi": 82.4,
+      "tier": "major",
+      "kind": "village",
+      "amenities": {
+        "pub": true,
+        "cafe": true,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "hotels, pubs, cafes and restaurants",
+      "lat": 51.5214962,
+      "lng": -1.1311269,
+      "along_m": 124662,
+      "offset_m": 727,
+      "side": "L"
+    },
+    {
+      "name": "Whitchurch & Pangbourne",
+      "path_mi": 86.8,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": true,
+        "cafe": true,
+        "shop": true,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "2 pubs, 2 hotels, restaurants, cafes, co-op",
+      "lat": 51.4839541,
+      "lng": -1.0863711,
+      "along_m": 131291,
+      "offset_m": 326,
+      "side": "R"
+    },
+    {
+      "name": "Purley on Thames",
+      "path_mi": 89.4,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.4782993,
+      "lng": -1.0449491,
+      "along_m": 135929,
+      "offset_m": 440,
+      "side": "R"
+    },
+    {
+      "name": "Tilehurst",
+      "path_mi": 90.3,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "former Roebuck pub",
+      "lat": 51.4579839,
+      "lng": -1.0409218,
+      "along_m": 137220,
+      "offset_m": 1763,
+      "side": "R"
+    },
+    {
+      "name": "Reading Bridge",
+      "path_mi": 93.6,
+      "tier": "major",
+      "kind": "town",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.46096,
+      "lng": -0.96787,
+      "along_m": 141795,
+      "offset_m": 3,
+      "side": "R"
+    },
+    {
+      "name": "Kennet Canal",
+      "path_mi": 94.5,
+      "tier": "minor",
+      "kind": "landmark",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.4551,
+      "lng": -0.9666,
+      "along_m": 141827,
+      "offset_m": 649,
+      "side": "R"
+    },
+    {
+      "name": "Sonning",
+      "path_mi": 96.7,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": null,
+        "cafe": true,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "cafes and restaurants",
+      "lat": 51.473589,
+      "lng": -0.9099103,
+      "along_m": 146847,
+      "offset_m": 339,
+      "side": "R"
+    },
+    {
+      "name": "Shiplake College Boathouse",
+      "path_mi": 98.8,
+      "tier": "minor",
+      "kind": "landmark",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.5158,
+      "lng": -0.8747,
+      "along_m": 153368,
+      "offset_m": 395,
+      "side": "R"
+    },
+    {
+      "name": "Shiplake",
+      "path_mi": 101.1,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": true,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "convenience store, Baskerville pub offers rooms",
+      "lat": 51.499498,
+      "lng": -0.8991225,
+      "along_m": 149854,
+      "offset_m": 484,
+      "side": "L"
+    },
+    {
+      "name": "Henley",
+      "path_mi": 104.8,
+      "tier": "major",
+      "kind": "town",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.5375786,
+      "lng": -0.9050287,
+      "along_m": 156537,
+      "offset_m": 327,
+      "side": "L"
+    },
+    {
+      "name": "Remenham",
+      "path_mi": 106,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.5514595,
+      "lng": -0.8899367,
+      "along_m": 158234,
+      "offset_m": 168,
+      "side": "R"
+    },
+    {
+      "name": "Hambleden",
+      "path_mi": 106.6,
+      "tier": "minor",
+      "kind": "lock",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.559932537488564,
+      "lng": -0.8732889611793031,
+      "along_m": 160337,
+      "offset_m": 0,
+      "side": "R"
+    },
+    {
+      "name": "Aston",
+      "path_mi": 107.9,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "Flower Pot Hotel offers rooms",
+      "lat": 51.5511515,
+      "lng": -0.8705093,
+      "along_m": 161394,
+      "offset_m": 436,
+      "side": "R"
+    },
+    {
+      "name": "Hurley",
+      "path_mi": 111,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": null,
+        "camping": true,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "two pubs, one offers rooms, a campsite",
+      "lat": 51.5455044,
+      "lng": -0.8101712,
+      "along_m": 165988,
+      "offset_m": 564,
+      "side": "R"
+    },
+    {
+      "name": "Marlow",
+      "path_mi": 113.3,
+      "tier": "major",
+      "kind": "town",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": true,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "shops, pubs and hotels",
+      "lat": 51.5718706,
+      "lng": -0.7769654,
+      "along_m": 169611,
+      "offset_m": 572,
+      "side": "L"
+    },
+    {
+      "name": "Bourne End",
+      "path_mi": 116.3,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.5799463,
+      "lng": -0.7120777,
+      "along_m": 174121,
+      "offset_m": 441,
+      "side": "L"
+    },
+    {
+      "name": "Cookham",
+      "path_mi": 117.7,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": true,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "shops, Bel and the Dragon",
+      "lat": 51.5600965,
+      "lng": -0.7081509,
+      "along_m": 176029,
+      "offset_m": 286,
+      "side": "R"
+    },
+    {
+      "name": "Maidenhead",
+      "path_mi": 120.9,
+      "tier": "major",
+      "kind": "town",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": true,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.522743,
+      "lng": -0.7197368,
+      "along_m": 181359,
+      "offset_m": 1229,
+      "side": "R"
+    },
+    {
+      "name": "Dorney/Bray Marina",
+      "path_mi": 123.4,
+      "tier": "minor",
+      "kind": "landmark",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.5062,
+      "lng": -0.6817,
+      "along_m": 184364,
+      "offset_m": 224,
+      "side": "L"
+    },
+    {
+      "name": "Dorney Lake",
+      "path_mi": 125.2,
+      "tier": "minor",
+      "kind": "landmark",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.4844,
+      "lng": -0.665,
+      "along_m": 186930,
+      "offset_m": 419,
+      "side": "R"
+    },
+    {
+      "name": "Eton and Windsor",
+      "path_mi": 127.5,
+      "tier": "major",
+      "kind": "town",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": true,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "hotels and eateries",
+      "lat": 51.4800285,
+      "lng": -0.6125716,
+      "along_m": 191678,
+      "offset_m": 600,
+      "side": "R"
+    },
+    {
+      "name": "Datchet",
+      "path_mi": 128.9,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": true,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "shops, restaurants",
+      "lat": 51.4838483,
+      "lng": -0.5784291,
+      "along_m": 194962,
+      "offset_m": 365,
+      "side": "L"
+    },
+    {
+      "name": "Albert Bridge, Old Windsor",
+      "path_mi": 130.6,
+      "tier": "minor",
+      "kind": "bridge",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": true,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "shops and refreshments",
+      "lat": 51.47124901414118,
+      "lng": -0.5841690161378801,
+      "along_m": 196234,
+      "offset_m": 0,
+      "side": "R"
+    },
+    {
+      "name": "Bells of Ouzeley",
+      "path_mi": 132.4,
+      "tier": "minor",
+      "kind": "landmark",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "The Bells of Ouzeley, a pub",
+      "lat": 51.4649,
+      "lng": -0.5691,
+      "along_m": 199068,
+      "offset_m": 144,
+      "side": "R"
+    },
+    {
+      "name": "Runnymede",
+      "path_mi": 132.8,
+      "tier": "minor",
+      "kind": "landmark",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.4453,
+      "lng": -0.5638,
+      "along_m": 201650,
+      "offset_m": 66,
+      "side": "R"
+    },
+    {
+      "name": "Staines",
+      "path_mi": 135.5,
+      "tier": "major",
+      "kind": "town",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.434012,
+      "lng": -0.511044,
+      "along_m": 205784,
+      "offset_m": 294,
+      "side": "L"
+    },
+    {
+      "name": "Laleham",
+      "path_mi": 137.9,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": true,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "buses, a pub and a shop",
+      "lat": 51.4089005,
+      "lng": -0.4902658,
+      "along_m": 209420,
+      "offset_m": 169,
+      "side": "L"
+    },
+    {
+      "name": "Chertsey Bridge",
+      "path_mi": 139.4,
+      "tier": "minor",
+      "kind": "bridge",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.38887137555002,
+      "lng": -0.48637961827137843,
+      "along_m": 211841,
+      "offset_m": 0,
+      "side": "L"
+    },
+    {
+      "name": "Shepperton Landing",
+      "path_mi": 141.3,
+      "tier": "minor",
+      "kind": "landmark",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.3934,
+      "lng": -0.4499,
+      "along_m": 216101,
+      "offset_m": 607,
+      "side": "L"
+    },
+    {
+      "name": "Walton",
+      "path_mi": 142.7,
+      "tier": "minor",
+      "kind": "village",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.3856837,
+      "lng": -0.419814,
+      "along_m": 218722,
+      "offset_m": 530,
+      "side": "R"
+    },
+    {
+      "name": "Sunbury Lock",
+      "path_mi": 144.4,
+      "tier": "minor",
+      "kind": "lock",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "pubs, restaurants and cafes",
+      "lat": 51.40507602400702,
+      "lng": -0.4060550048469782,
+      "along_m": 220995,
+      "offset_m": 1,
+      "side": "L"
+    },
+    {
+      "name": "Hampton Court",
+      "path_mi": 147.5,
+      "tier": "major",
+      "kind": "landmark",
+      "amenities": {
+        "pub": true,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "pubs and restaurants",
+      "lat": 51.4034,
+      "lng": -0.3382,
+      "along_m": 226259,
+      "offset_m": 155,
+      "side": "L"
+    },
+    {
+      "name": "Kingston upon Thames",
+      "path_mi": 150.4,
+      "tier": "major",
+      "kind": "town",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.4096275,
+      "lng": -0.3062621,
+      "along_m": 230507,
+      "offset_m": 190,
+      "side": "R"
+    },
+    {
+      "name": "Teddington",
+      "path_mi": 152,
+      "tier": "major",
+      "kind": "landmark",
+      "amenities": {
+        "pub": null,
+        "cafe": null,
+        "shop": null,
+        "camping": null,
+        "toilets": null,
+        "boat_hire": null
+      },
+      "quoted_amenities": "",
+      "lat": 51.431,
+      "lng": -0.3236,
+      "along_m": 233538,
+      "offset_m": 28,
+      "side": "L"
+    }
+  ]
+}

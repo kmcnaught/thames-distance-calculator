@@ -28,6 +28,7 @@
       <nav class="tabs" role="tablist">
         <button class="tab active" data-tab="measure" role="tab" aria-selected="true">Measure</button>
         <button class="tab" data-tab="find" role="tab" aria-selected="false">Find trips</button>
+        <button class="tab" data-tab="strip" role="tab" aria-selected="false">Strip</button>
       </nav>
 
       <section id="tab-measure" class="tab-panel active" role="tabpanel">
@@ -88,12 +89,47 @@
           <label class="check"><input id="find-need-park" type="checkbox" /> Require parking at put-in</label>
         </div>
 
+        <div class="field">
+          <label class="field-label">Relative to Oxford</label>
+          <div id="find-oxford-side" class="seg" role="radiogroup" aria-label="Direction relative to Oxford">
+            <button type="button" class="seg-btn active" data-side="any" role="radio" aria-checked="true">Any</button>
+            <button type="button" class="seg-btn" data-side="upstream" role="radio" aria-checked="false">Upstream</button>
+            <button type="button" class="seg-btn" data-side="downstream" role="radio" aria-checked="false">Downstream</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">
+            Trip end within
+            <output id="find-oxford-out" class="field-value">15 mi of Oxford</output>
+          </label>
+          <input id="find-oxford" type="range" min="0" max="50" step="0.5" value="15" />
+        </div>
+
         <div class="actions">
           <button id="btn-find" class="btn btn-primary">Find trips</button>
         </div>
 
         <p id="find-summary" class="hint">Adjust filters and press Find.</p>
         <ol id="find-results" class="results" aria-live="polite"></ol>
+      </section>
+
+      <section id="tab-strip" class="tab-panel" role="tabpanel" hidden>
+        <div class="strip-controls">
+          <label class="field-label" style="margin-bottom: 4px;">
+            Scale
+            <output id="strip-scale-out" class="field-value">10 mi in view</output>
+          </label>
+          <input id="strip-scale" type="range" min="5" max="20" step="1" value="10" />
+        </div>
+        <div id="strip-viewport" class="strip-viewport" aria-label="River waymark strip">
+          <div id="strip-axis" class="strip-axis"></div>
+          <div id="strip-waymarks" class="strip-waymarks"></div>
+          <div id="strip-cursor" class="strip-cursor" role="slider" aria-label="Position on river" tabindex="0">
+            <span class="strip-cursor-label">—</span>
+          </div>
+        </div>
+        <p id="strip-hint" class="hint">Drag the strip to pan. Drag the blue line to move the cursor. Tap a waymark to view on the map.</p>
       </section>
     </div>
 

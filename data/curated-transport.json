@@ -1,0 +1,208 @@
+{
+  "source": "https://walkthethames.co.uk/thames-path-distances/",
+  "extracted": "2026-08-24",
+  "note": "Public-transport mentions transcribed from the walkthethames guide's per-settlement descriptions. Only settlements where transport is explicitly described in the guide's prose are included. An absent settlement (e.g. Oxford, Henley, Marlow, Windsor) means the extract did not surface a mention, NOT that no service exists — verify against the guide before treating an absence as authoritative. Distances are along the Thames Path (walker's route), not the river.",
+  "guide_silences": "Verified 2026-08-24 by targeted re-fetch — the following settlements have well-known stations but the guide's prose contains no public-transport mention: Abingdon, Wallingford, Benson, Henley, Marlow, Eton and Windsor, Walton. These are genuine gaps in the source, not extraction misses. If transport for those is wanted, source it elsewhere (OSM, hand-add) rather than re-reading this guide.",
+  "schema": {
+    "waypoint": "settlement/landmark name as it appears in the guide",
+    "path_mi": "distance from source along the Thames Path (walker's miles)",
+    "kind": "rail | tube | bus | ferry",
+    "station": "station/stop name, or null if unnamed",
+    "walk_mi": "numeric walking distance from settlement centre to station, or null if only qualitative",
+    "walk_note": "raw text describing distance/access, when not numeric",
+    "destinations": "line destinations mentioned in the guide (may be a change point, not final)",
+    "notes": "service caveats (e.g. 'no Sunday service')"
+  },
+  "transport": [
+    {
+      "waypoint": "Osney Bridge, Oxford",
+      "path_mi": 52.9,
+      "kind": "rail",
+      "station": "Oxford",
+      "walk_mi": null,
+      "walk_note": "close to the path via the town",
+      "destinations": ["London", "Birmingham and the north", "Didcot Parkway (change for South Wales and the South West)"],
+      "notes": "quote: 'There are rail connections to London, Birmingham and the north, and also to nearby Didcot Parkway where you can connect for South Wales and the South West.'"
+    },
+    {
+      "waypoint": "Radley Boat House",
+      "path_mi": 58.8,
+      "kind": "rail",
+      "station": "Radley",
+      "walk_mi": 1.0,
+      "walk_note": "about a mile away",
+      "destinations": ["Oxford"],
+      "notes": null
+    },
+    {
+      "waypoint": "Culham Lock",
+      "path_mi": 64.7,
+      "kind": "rail",
+      "station": "Culham",
+      "walk_mi": null,
+      "walk_note": "roughly halfway between Culham Lock and Clifton Hampden",
+      "destinations": ["Oxford", "Reading"],
+      "notes": "no service on Sundays"
+    },
+    {
+      "waypoint": "Clifton Hampden",
+      "path_mi": 67.9,
+      "kind": "rail",
+      "station": "Culham",
+      "walk_mi": null,
+      "walk_note": "walk back along the road",
+      "destinations": ["Oxford", "Reading"],
+      "notes": "no service on Sundays; shares Culham station with the previous entry"
+    },
+    {
+      "waypoint": "Cholsey",
+      "path_mi": 78.4,
+      "kind": "rail",
+      "station": "Cholsey",
+      "walk_mi": 1.25,
+      "walk_note": "1.25 miles off-path via Ferry Lane",
+      "destinations": ["Reading", "Didcot Parkway"],
+      "notes": null
+    },
+    {
+      "waypoint": "Goring & Streatley",
+      "path_mi": 82.4,
+      "kind": "rail",
+      "station": "Goring & Streatley",
+      "walk_mi": null,
+      "walk_note": "integrated with the villages",
+      "destinations": ["Didcot Parkway", "Reading"],
+      "notes": null
+    },
+    {
+      "waypoint": "Whitchurch & Pangbourne",
+      "path_mi": 86.8,
+      "kind": "rail",
+      "station": "Pangbourne",
+      "walk_mi": null,
+      "walk_note": "close to the path",
+      "destinations": ["Reading", "Didcot Parkway", "Oxford"],
+      "notes": null
+    },
+    {
+      "waypoint": "Tilehurst",
+      "path_mi": 90.3,
+      "kind": "rail",
+      "station": "Tilehurst",
+      "walk_mi": null,
+      "walk_note": "integrated with the village, on the A329",
+      "destinations": ["Reading", "Didcot Parkway"],
+      "notes": null
+    },
+    {
+      "waypoint": "Reading Bridge",
+      "path_mi": 93.6,
+      "kind": "rail",
+      "station": "Reading",
+      "walk_mi": null,
+      "walk_note": "close to the path via the bridge",
+      "destinations": ["everywhere — major interchange"],
+      "notes": "one of the busiest stations in England"
+    },
+    {
+      "waypoint": "Shiplake",
+      "path_mi": 101.1,
+      "kind": "rail",
+      "station": "Shiplake",
+      "walk_mi": null,
+      "walk_note": "integrated with the village",
+      "destinations": ["Twyford (change for London or Reading)"],
+      "notes": "branch line from Twyford to Henley (terminus)"
+    },
+    {
+      "waypoint": "Bourne End",
+      "path_mi": 116.3,
+      "kind": "rail",
+      "station": "Bourne End",
+      "walk_mi": null,
+      "walk_note": "integrated with the town",
+      "destinations": ["Maidenhead (change for London or Reading)"],
+      "notes": "on the Maidenhead–Marlow branch line"
+    },
+    {
+      "waypoint": "Cookham",
+      "path_mi": 117.7,
+      "kind": "rail",
+      "station": "Cookham",
+      "walk_mi": 0.5,
+      "walk_note": "just over half a mile from the main village",
+      "destinations": ["Maidenhead"],
+      "notes": null
+    },
+    {
+      "waypoint": "Maidenhead",
+      "path_mi": 120.9,
+      "kind": "rail",
+      "station": "Maidenhead",
+      "walk_mi": 0.75,
+      "walk_note": "3/4 mile west of the river",
+      "destinations": ["London", "Reading and beyond"],
+      "notes": null
+    },
+    {
+      "waypoint": "Datchet",
+      "path_mi": 128.9,
+      "kind": "rail",
+      "station": "Datchet",
+      "walk_mi": null,
+      "walk_note": "integrated with the village",
+      "destinations": ["Windsor", "London Waterloo"],
+      "notes": null
+    },
+    {
+      "waypoint": "Staines",
+      "path_mi": 135.5,
+      "kind": "rail",
+      "station": "Staines",
+      "walk_mi": null,
+      "walk_note": "integrated with the town",
+      "destinations": ["London Waterloo", "Windsor", "Reading"],
+      "notes": "line forks at Staines"
+    },
+    {
+      "waypoint": "Laleham",
+      "path_mi": 137.9,
+      "kind": "bus",
+      "station": null,
+      "walk_mi": null,
+      "walk_note": "buses available from the village",
+      "destinations": [],
+      "notes": "no rail; only public-transport mention on the page that is a bus rather than train"
+    },
+    {
+      "waypoint": "Chertsey Bridge",
+      "path_mi": 139.4,
+      "kind": "rail",
+      "station": "Chertsey",
+      "walk_mi": 1.0,
+      "walk_note": "about a mile west of the river",
+      "destinations": ["Staines (upstream)", "Weybridge", "Walton-on-Thames"],
+      "notes": null
+    },
+    {
+      "waypoint": "Hampton Court",
+      "path_mi": 147.5,
+      "kind": "rail",
+      "station": "Hampton Court",
+      "walk_mi": null,
+      "walk_note": "integrated with the settlement",
+      "destinations": ["London Waterloo"],
+      "notes": "end of a branch line"
+    },
+    {
+      "waypoint": "Kingston upon Thames",
+      "path_mi": 150.4,
+      "kind": "rail",
+      "station": "Kingston",
+      "walk_mi": null,
+      "walk_note": "integrated with the town",
+      "destinations": ["Richmond (downstream)"],
+      "notes": null
+    }
+  ]
+}
