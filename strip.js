@@ -14,8 +14,7 @@ const KIND_ICON = {
   landmark: '△',
 };
 
-// Bake a compact list of amenity → single-char glyphs. Renders inline next to
-// the name and stays cheap even for dense strips.
+// Single-char glyphs rendered inline next to each waymark name.
 const AMENITY_GLYPH = { pub: '🍺', cafe: '☕', shop: '🛒', camping: '⛺', toilets: '🚻', boat_hire: '🛶' };
 const TRANSPORT_GLYPH = { rail: '🚂', bus: '🚌', tube: 'Ⓤ', ferry: '⛴' };
 
@@ -23,11 +22,9 @@ export function initStrip({
   container,      // the tab panel root
   waymarks,       // array from mergeWaymarks()
   totalRiverM,    // full length of the river in metres (from thames.json)
-  onFocusRiver,   // (latlng, meta) => void — called when a waymark is tapped
-  onCursorMove,   // (alongM) => void       — called when the cursor moves
+  onFocusRiver,   // (latlng) => void — called when a waymark is tapped
 }) {
   const viewport = container.querySelector('#strip-viewport');
-  const axis = container.querySelector('#strip-axis');  // eslint-disable-line no-unused-vars
   const waymarkLayer = container.querySelector('#strip-waymarks');
   const cursorEl = container.querySelector('#strip-cursor');
   const cursorLabel = cursorEl.querySelector('.strip-cursor-label');
@@ -144,8 +141,7 @@ export function initStrip({
         state.cursorM = clamp(w.along_m, 0, totalRiverM);
         renderTicks();
         renderCursor();
-        if (onCursorMove) onCursorMove(state.cursorM);
-        if (onFocusRiver) onFocusRiver([w.lat, w.lng], { name: w.name, along_m: w.along_m });
+        if (onFocusRiver) onFocusRiver([w.lat, w.lng]);
       });
       waymarkLayer.appendChild(el);
     }
@@ -198,7 +194,6 @@ export function initStrip({
     // when the cursor moves. Waymarks are position-only, no need to re-render.
     renderTicks();
     renderCursor();
-    if (onCursorMove) onCursorMove(state.cursorM);
   });
   cursorEl.addEventListener('pointerup', () => { cursorDrag = false; });
   cursorEl.addEventListener('pointercancel', () => { cursorDrag = false; });
@@ -211,18 +206,6 @@ export function initStrip({
   observer.observe(viewport);
 
   render();
-
-  return {
-    setCursorM(m) {
-      state.cursorM = clamp(m, 0, totalRiverM);
-      renderCursor();
-    },
-    focusOn(m) {
-      state.centreM = clamp(m, rangeM() / 2, totalRiverM - rangeM() / 2);
-      state.cursorM = clamp(m, 0, totalRiverM);
-      render();
-    },
-  };
 }
 
 function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }

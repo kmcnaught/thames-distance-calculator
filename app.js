@@ -97,6 +97,7 @@ const state = {
     bridges: null,        // L.layerGroup
     extras: null,         // L.layerGroup
     findOverlay: null,    // L.layerGroup of route ribbons
+    stripFocus: null,     // L.circleMarker from the last strip-waymark tap
   },
 };
 
@@ -347,6 +348,7 @@ els.btnSwap.addEventListener('click', () => {
 els.btnClear.addEventListener('click', () => {
   clearPin('A'); clearPin('B');
   clearFindOverlay();
+  clearStripFocus();
   state.next = 'A';
   els.nextSlot.textContent = 'A';
   els.nextSlot.classList.add('pin-a');
@@ -640,6 +642,13 @@ function clearFindOverlay() {
   }
 }
 
+function clearStripFocus() {
+  if (state.layers.stripFocus) {
+    map.removeLayer(state.layers.stripFocus);
+    state.layers.stripFocus = null;
+  }
+}
+
 function drawFindOverlay(items) {
   clearFindOverlay();
   if (!items.length || !state.thames) return;
@@ -913,14 +922,14 @@ function buildPutIns() {
     const transport = transportRes && transportRes.ok ? await transportRes.json() : { transport: [] };
     const waymarks = mergeWaymarks({ curated, transport, launches: state.launches });
     const totalRiverM = state.thames.cum[state.thames.cum.length - 1];
-    state.stripController = initStrip({
+    initStrip({
       container: els.tabPanels.strip,
       waymarks,
       totalRiverM,
-      onFocusRiver: (latlng /* [lat, lng] */) => {
+      onFocusRiver: (latlng) => {
         // Pan the map and drop a transient marker at the tapped waymark.
         map.panTo(latlng, { animate: true });
-        if (state.layers.stripFocus) map.removeLayer(state.layers.stripFocus);
+        clearStripFocus();
         state.layers.stripFocus = L.circleMarker(latlng, {
           radius: 7, color: '#0b3a5c', fillColor: '#facc15', fillOpacity: 0.9, weight: 2,
         }).addTo(map);
