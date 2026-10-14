@@ -363,26 +363,14 @@ function pinIcon(letter, color) {
 
 const PIN_COLOR = { A: '#0b3a5c', B: '#c45c3f' };
 
-// Manual double-tap detector. Leaflet's dblclick is unreliable on iOS Safari —
-// the second tap is often consumed by the OS even with doubleClickZoom off.
-// Two click events within 350 ms / 30 px works uniformly for mouse and touch.
-let lastTap = { t: 0, x: 0, y: 0 };
 map.on('click', (e) => {
-  const now = Date.now();
-  const dx = e.containerPoint.x - lastTap.x;
-  const dy = e.containerPoint.y - lastTap.y;
-  if (now - lastTap.t < 350 && Math.hypot(dx, dy) < 30) {
-    const target = [e.latlng.lat, e.latlng.lng];
-    setPin(pickSlot(target), target);
-    lastTap = { t: 0, x: 0, y: 0 };
-    return;
-  }
-  lastTap = { t: now, x: e.containerPoint.x, y: e.containerPoint.y };
+  const target = [e.latlng.lat, e.latlng.lng];
+  setPin(pickSlot(target), target);
 });
 
-// Which slot a double-tap fills: an empty one first, otherwise whichever
-// existing pin is closer to the tap. Dragging or clicking a specific pin
-// remains the way to override.
+// Which slot a tap fills: an empty one first, otherwise whichever existing
+// pin is closer to the tap. Dragging or clicking a specific pin remains the
+// way to override.
 function pickSlot(target) {
   const { A, B } = state.pins;
   if (A == null) return 'A';
@@ -477,15 +465,15 @@ function refresh() {
 
   if (!hasA && !hasB) {
     els.hint.hidden = false;
-    els.hint.textContent = 'Double-tap the map to drop pin A.';
+    els.hint.textContent = 'Click the map to drop pin A.';
     els.readout.hidden = true;
   } else if (hasA && !hasB) {
     els.hint.hidden = false;
-    els.hint.textContent = 'Double-tap the map to drop pin B.';
+    els.hint.textContent = 'Click the map to drop pin B.';
     els.readout.hidden = true;
   } else if (hasB && !hasA) {
     els.hint.hidden = false;
-    els.hint.textContent = 'Double-tap the map to drop pin A.';
+    els.hint.textContent = 'Click the map to drop pin A.';
     els.readout.hidden = true;
   } else {
     els.hint.hidden = true;
