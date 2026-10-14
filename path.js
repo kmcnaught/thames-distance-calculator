@@ -21,6 +21,72 @@ map.fitBounds(line.getBounds(), { padding: [40, 40] });
 
 const highlight = L.polyline([], { color: '#9ac67a', weight: 7, opacity: 0.65 }).addTo(map);
 
+// Accommodation layer — colored circle markers banded by cheap-OSM-tag proxy.
+// Band → colour map and human-readable labels are kept in one place so the
+// legend swatches in path.html can be eyeballed against the markers.
+const BAND_COLOR = {
+  cheap:        '#2a7d2a',
+  medium:       '#c08020',
+  medium_pricy: '#c45c3f',
+  pricy:        '#7c3aed',
+};
+const BAND_LABEL = {
+  cheap:        '£ · cheap',
+  medium:       '££ · medium',
+  medium_pricy: '£££ · upper-mid',
+  pricy:        '££££ · pricy',
+};
+const TYPE_LABEL = {
+  hotel: 'hotel',
+  hostel: 'hostel',
+  guest_house: 'B&B / guest house',
+  bed_and_breakfast: 'B&B',
+  motel: 'motel',
+  chalet: 'chalet',
+};
+
+const accomLayer = L.layerGroup();
+try {
+  const accomData = await fetch('./data/path-accommodation.json').then((r) => {
+    if (!r.ok) throw new Error(`accommodation fetch: ${r.status}`);
+    return r.json();
+  });
+  for (const a of accomData.accommodation) {
+    const marker = L.circleMarker([a.lat, a.lng], {
+      radius: 5,
+      color: '#fff',
+      weight: 1,
+      fillColor: BAND_COLOR[a.band] || '#888',
+      fillOpacity: 0.9,
+    });
+    const nameHtml = a.name ? escapeHtml(a.name) : '<em>unnamed</em>';
+    const typeHtml = escapeHtml(TYPE_LABEL[a.type] || a.type);
+    const bandHtml = escapeHtml(BAND_LABEL[a.band] || a.band);
+    marker.bindPopup(
+      `<div class="accom-popup">
+        <div class="accom-name">${nameHtml}</div>
+        <div class="accom-meta">${typeHtml}</div>
+        <div class="accom-band"><span class="band-swatch" style="background:${BAND_COLOR[a.band] || '#888'}"></span>${bandHtml}</div>
+      </div>`
+    );
+    marker.addTo(accomLayer);
+  }
+  console.log(`[path] loaded ${accomData.accommodation.length} accommodations`);
+} catch (err) {
+  console.warn('[path] accommodation layer unavailable:', err.message);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
+el('toggle-accom').addEventListener('change', (ev) => {
+  if (ev.target.checked) accomLayer.addTo(map);
+  else accomLayer.remove();
+});
+
 const pinStyle = (letter, color) => L.divIcon({
   className: 'tp-pin',
   html: `<div style="background:${color};color:#fff;width:26px;height:26px;border-radius:50%;` +
