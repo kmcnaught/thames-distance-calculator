@@ -2,7 +2,7 @@
 // Map-first single-page app. Click two spots, see channel-following distance,
 // iterate. URL state (?a=lat,lng&b=lat,lng) is the share format.
 
-import { snap, measure, reachPts, haversine } from './lib/geo.mjs';
+import { snap, haversine } from './lib/geo.mjs';
 import { mergeWaymarks } from './lib/waymarks.mjs';
 import { initStrip } from './strip.js';
 
@@ -79,6 +79,7 @@ const els = {
 
 const state = {
   thames: null,           // { coords, cum, meta }
+  waterways: [],          // [{ name, short_name, kind, coords, cum, length_m }]  Thames + tributaries
   launches: null,         // { launches: [...], meta }
   campsites: null,        // { campsites: [...], meta }
   parking: null,          // { parkings: [...], meta }
@@ -93,6 +94,7 @@ const state = {
     snapLines: { A: null, B: null },
     reach: null,
     centreline: null,
+    tributaries: null,    // L.layerGroup of tributary polylines
     launches: null,       // L.layerGroup
     bridges: null,        // L.layerGroup
     extras: null,         // L.layerGroup
@@ -100,6 +102,132 @@ const state = {
     stripFocus: null,     // L.circleMarker from the last strip-waymark tap
   },
 };
+
+// Snap a target to the nearest waterway. Returns { ww, snap }. Thames gets a
+// small distance bias (-15 m) so a point that's a near-tie between the Thames
+// and a tributary close to its confluence prefers the Thames — matches the
+// expectation that the measure tool is primarily a Thames tool.
+function snapAny(target) {
+  let best = null;
+  for (const ww of state.waterways) {
+    const s = snap(ww.coords, ww.cum, target);
+    const bias = ww.kind === 'thames' ? -15 : 0;
+    const score = s.off + bias;
+    if (!best || score < best.score) best = { ww, snap: s, score };
+  }
+  return best;
+}
+
+function thamesWaterway() {
+  return state.waterways.find((w) => w.kind === 'thames');
+}
+
+// Route a measurement between two snapped pins through the Thames if they're
+// on different waterways. Assumes tree topology: each tributary joins the
+// Thames at exactly one confluence (stored at build time as
+// `confluence_thames_along_m`). Tributary polylines are oriented so the LAST
+// vertex is the confluence end — so a pin's distance to its confluence is
+// `length_m - snap.along`. Returns { river, straight, legs, path } where
+// `legs` describes the three (or fewer) components and `path` is the latlng
+// polyline for drawing the reach.
+function measureAcross(a, b) {
+  // Interpolate a latlng on a line at a given cumulative-distance along_m.
+  const interpAlong = (ww, alongM) => {
+    const cum = ww.cum, coords = ww.coords;
+    if (alongM <= 0) return coords[0].slice();
+    if (alongM >= cum[cum.length - 1]) return coords[cum.length - 1].slice();
+    let lo = 0, hi = cum.length - 1;
+    while (lo + 1 < hi) {
+      const mid = (lo + hi) >> 1;
+      if (cum[mid] <= alongM) lo = mid; else hi = mid;
+    }
+    const t = (alongM - cum[lo]) / (cum[hi] - cum[lo]);
+    return [coords[lo][0] + t * (coords[hi][0] - coords[lo][0]),
+            coords[lo][1] + t * (coords[hi][1] - coords[lo][1])];
+  };
+  // Slice a polyline between two along_m values, returning the latlngs in
+  // low-to-high order (reverse at the call site if needed).
+  const sliceBetween = (ww, fromM, toM) => {
+    const [lo, hi] = fromM <= toM ? [fromM, toM] : [toM, fromM];
+    const pts = [interpAlong(ww, lo)];
+    for (let i = 0; i < ww.cum.length; i++) {
+      if (ww.cum[i] > lo && ww.cum[i] < hi) pts.push(ww.coords[i].slice());
+    }
+    pts.push(interpAlong(ww, hi));
+    return pts;
+  };
+
+  const sameWaterway = a.ww === b.ww;
+  const straight = haversine(a.snap.latlng, b.snap.latlng);
+
+  if (sameWaterway) {
+    const river = Math.abs(a.snap.along - b.snap.along);
+    const path = sliceBetween(a.ww, a.snap.along, b.snap.along);
+    return { river, straight, legs: [{ ww: a.ww, meters: river }], path };
+  }
+
+  // Cross-waterway: compose via the Thames. Every tributary carries a baked
+  // `confluence_thames_along_m` from the build pipeline.
+  const thames = thamesWaterway();
+  if (!thames) return null;
+  const alongOnThames = (side) =>
+    side.ww.kind === 'thames' ? side.snap.along : side.ww.confluence_thames_along_m;
+  const toConfluence = (side) =>
+    side.ww.kind === 'thames' ? 0 : side.ww.length_m - side.snap.along;
+
+  const legA_m = toConfluence(a);
+  const legB_m = toConfluence(b);
+  const thamesFrom = alongOnThames(a);
+  const thamesTo = alongOnThames(b);
+  // Normal case: both pins project to distinct Thames alongs, so the Thames
+  // leg is the Thames arc between them. Edge case: when two tributaries share
+  // a confluence coord (K&A and Kennet both bake Reading as confluence) but
+  // their polyline ends are physically apart (K&A ends at Newbury), fall back
+  // to the straight-line gap between the polyline ends — otherwise we'd
+  // undercount by that gap distance.
+  let thamesLeg_m = Math.abs(thamesFrom - thamesTo);
+  if (thamesLeg_m < 100 && a.ww.kind !== 'thames' && b.ww.kind !== 'thames') {
+    const endA = a.ww.coords[a.ww.coords.length - 1];
+    const endB = b.ww.coords[b.ww.coords.length - 1];
+    thamesLeg_m = haversine(endA, endB);
+  }
+  const river = legA_m + thamesLeg_m + legB_m;
+
+  // Build the drawn path: pin A → confluence A (on tributary), confluence A
+  // snapped onto Thames → confluence B (on Thames), confluence B snapped onto
+  // Thames → pin B (on tributary). Each tributary segment runs from the
+  // pin's snap along_m to the end of its polyline (the confluence end).
+  const path = [];
+  if (a.ww.kind !== 'thames') {
+    const seg = sliceBetween(a.ww, a.snap.along, a.ww.length_m);
+    path.push(...seg);
+  } else {
+    path.push(a.snap.latlng.slice());
+  }
+  if (thamesLeg_m > 0) {
+    const seg = sliceBetween(thames, thamesFrom, thamesTo);
+    // sliceBetween returned low→high; flip if we're travelling high→low so the
+    // drawn line matches the direction of travel from A to B.
+    if (thamesFrom > thamesTo) seg.reverse();
+    path.push(...seg);
+  }
+  if (b.ww.kind !== 'thames') {
+    const seg = sliceBetween(b.ww, b.snap.along, b.ww.length_m);
+    // seg runs from snap→confluence end; we need confluence→snap for the
+    // B-side so the path's direction continues A→Thames→B.
+    seg.reverse();
+    path.push(...seg);
+  } else {
+    path.push(b.snap.latlng.slice());
+  }
+
+  const legs = [];
+  if (a.ww.kind !== 'thames') legs.push({ ww: a.ww, meters: legA_m });
+  if (thamesLeg_m > 0) legs.push({ ww: thames, meters: thamesLeg_m });
+  if (b.ww.kind !== 'thames') legs.push({ ww: b.ww, meters: legB_m });
+
+  return { river, straight, legs, path };
+}
 
 function activeUnit() { return els.unitsKm?.checked ? 'km' : 'mi'; }
 function altUnit()    { return activeUnit() === 'mi' ? 'km' : 'mi'; }
@@ -247,15 +375,19 @@ function refresh() {
   els.btnSwap.disabled = !(hasA && hasB);
   els.btnShare.disabled = !(hasA && hasB);
 
+  // Snap each pin to whichever waterway is nearest; may be Thames or any tributary.
+  const snapA = hasA && state.waterways.length ? snapAny(A) : null;
+  const snapB = hasB && state.waterways.length ? snapAny(B) : null;
+
   // Snap lines
   for (const slot of ['A', 'B']) {
     if (state.layers.snapLines[slot]) {
       map.removeLayer(state.layers.snapLines[slot]);
       state.layers.snapLines[slot] = null;
     }
-    if (state.pins[slot] && state.thames) {
-      const s = snap(state.thames.coords, state.thames.cum, state.pins[slot]);
-      state.layers.snapLines[slot] = L.polyline([state.pins[slot], s.latlng], {
+    const s = slot === 'A' ? snapA : snapB;
+    if (s) {
+      state.layers.snapLines[slot] = L.polyline([state.pins[slot], s.snap.latlng], {
         color: PIN_COLOR[slot],
         weight: 1.5,
         opacity: 0.55,
@@ -282,23 +414,33 @@ function refresh() {
   } else {
     els.hint.hidden = true;
     els.readout.hidden = false;
-    const m = measure(state.thames.coords, state.thames.cum, A, B);
+    const result = measureAcross(snapA, snapB);
     const u = activeUnit(), au = altUnit();
-    els.distPrimary.textContent = inUnit(m.river, u).toFixed(2);
-    els.distPrimaryUnit.textContent = UNITS[u].label + ' on the river';
-    els.distSecondary.textContent = fmtDist(m.river, 2, au);
-    els.distStraight.textContent = fmtDist(m.straight, 2, u) + ' straight';
-    els.sinuosity.textContent = 'sinuosity ' + m.sinuosity.toFixed(2);
+    const sameWw = snapA.ww === snapB.ww;
+    const ww = snapA.ww;
+    els.distPrimary.textContent = inUnit(result.river, u).toFixed(2);
+    if (sameWw) {
+      els.distPrimaryUnit.textContent = UNITS[u].label + (ww.kind === 'thames' ? ' on the river' : ` on the ${ww.short_name}`);
+    } else {
+      // Cross-river: name the segments in travel order so the readout reads
+      // like a route (e.g. "via Thames + Cherwell").
+      const segs = result.legs.map((l) => l.ww.short_name).join(' → ');
+      els.distPrimaryUnit.textContent = UNITS[u].label + ' via ' + segs;
+    }
+    els.distSecondary.textContent = fmtDist(result.river, 2, au);
+    els.distStraight.textContent = fmtDist(result.straight, 2, u) + ' straight';
+    const sinuosity = result.straight > 0 ? result.river / result.straight : 1;
+    els.sinuosity.textContent = 'sinuosity ' + sinuosity.toFixed(2);
     const warnings = [];
-    if (m.a.off > 500) warnings.push(`A is ${fmtDist(m.a.off, 2)} from the river`);
-    if (m.b.off > 500) warnings.push(`B is ${fmtDist(m.b.off, 2)} from the river`);
+    if (snapA.snap.off > 500) warnings.push(`A is ${fmtDist(snapA.snap.off, 2)} from the ${snapA.ww.short_name}`);
+    if (snapB.snap.off > 500) warnings.push(`B is ${fmtDist(snapB.snap.off, 2)} from the ${snapB.ww.short_name}`);
     if (warnings.length) {
       els.warn.hidden = false;
       els.warn.textContent = warnings.join(' · ');
     } else {
       els.warn.hidden = true;
     }
-    state.layers.reach = L.polyline(reachPts(state.thames.coords, m.a, m.b), {
+    state.layers.reach = L.polyline(result.path, {
       color: '#0b3a5c',
       weight: 5,
       opacity: 0.78,
@@ -866,8 +1008,9 @@ function buildPutIns() {
 
 // Boot
 (async () => {
-  const [thamesRes, launchesRes, campsitesRes, parkingRes, bridgesRes, extrasRes, curatedRes, transportRes] = await Promise.all([
+  const [thamesRes, tributariesRes, launchesRes, campsitesRes, parkingRes, bridgesRes, extrasRes, curatedRes, transportRes] = await Promise.all([
     fetch('./data/thames.json'),
+    fetch('./data/tributaries.json').catch(() => null),
     fetch('./data/launches.json').catch(() => null),
     fetch('./data/campsites.json').catch(() => null),
     fetch('./data/parking.json').catch(() => null),
@@ -877,13 +1020,56 @@ function buildPutIns() {
     fetch('./data/curated-transport.json').catch(() => null),
   ]);
   state.thames = await thamesRes.json();
-  // Render the centreline subtly so the user sees the navigable channel.
+  state.waterways.push({
+    name: 'River Thames',
+    short_name: 'Thames',
+    kind: 'thames',
+    coords: state.thames.coords,
+    cum: state.thames.cum,
+    length_m: state.thames.cum[state.thames.cum.length - 1],
+  });
+  // Render the centreline so the user sees the navigable channel. Colour
+  // depends on base tiles: dark navy against the pale Streets tiles, lighter
+  // blue against Satellite imagery so it stays visible against dark terrain.
   state.layers.centreline = L.polyline(state.thames.coords, {
     color: '#0b3a5c',
-    weight: 2,
-    opacity: 0.4,
+    weight: 3.6,
+    opacity: 0.55,
   }).addTo(map);
   map.fitBounds(state.layers.centreline.getBounds(), { padding: [40, 40] });
+  const retintCentreline = () => {
+    const satellite = map.hasLayer(baseSatellite);
+    state.layers.centreline.setStyle(satellite
+      ? { color: '#7dd3fc', opacity: 0.9 }
+      : { color: '#0b3a5c', opacity: 0.55 });
+  };
+  map.on('baselayerchange', retintCentreline);
+
+  // Tributaries: thinner, lighter blue; canals get a dashed stroke to read
+  // differently from natural rivers. Pins can snap to any of these.
+  if (tributariesRes && tributariesRes.ok) {
+    const tribs = await tributariesRes.json();
+    state.layers.tributaries = L.layerGroup().addTo(map);
+    for (const w of tribs.waterways) {
+      state.waterways.push({
+        name: w.name,
+        short_name: w.short_name,
+        kind: w.kind,
+        coords: w.points,
+        cum: w.cum,
+        length_m: w.length_m,
+        confluence: w.confluence,
+        confluence_thames_along_m: w.confluence_thames_along_m,
+      });
+      L.polyline(w.points, {
+        color: w.kind === 'canal' ? '#4a6fa5' : '#2a6ea5',
+        weight: 2,
+        opacity: 0.7,
+        dashArray: w.kind === 'canal' ? '4 4' : null,
+      }).addTo(state.layers.tributaries);
+    }
+    layerControl.addOverlay(state.layers.tributaries, 'Tributaries');
+  }
 
   if (launchesRes && launchesRes.ok) {
     state.launches = await launchesRes.json();
