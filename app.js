@@ -264,27 +264,88 @@ const baseStreets = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png'
   maxZoom: 19,
   attribution: '',
 });
+// Separate pane so Esri place-name tiles render above satellite imagery
+// (z-index 400) but below markers/popups (600+).
+map.createPane('labelsPane');
+map.getPane('labelsPane').style.zIndex = 450;
+map.getPane('labelsPane').style.pointerEvents = 'none';
+
 const baseSatellite = L.tileLayer(
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-  {
-    maxZoom: 19,
-    attribution: 'Imagery © Esri',
-  }
+  { maxZoom: 19, attribution: 'Imagery © Esri' }
 );
+const offRiverLabels = L.tileLayer(
+  'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+  { maxZoom: 19, pane: 'labelsPane' }
+);
+const onRiverLabels = L.layerGroup();
+
 baseStreets.addTo(map);
 const layerControl = L.control.layers(
-  { Streets: baseStreets, Satellite: baseSatellite },
-  {},
+  { 'Streets': baseStreets, 'Satellite': baseSatellite },
+  {
+    'Place names (off-river)': offRiverLabels,
+    'River labels (locks, towns)': onRiverLabels,
+  },
   { position: 'topright', collapsed: true }
 ).addTo(map);
+
+// OSM street tiles have labels baked in, so Esri place labels would double up
+// on Streets. Auto-hide them there, remember the user's choice, restore on Satellite.
+let satOffRiverPref = true;
+let syncingOffRiver = false;
+function syncOffRiverToBase() {
+  const shouldShow = map.hasLayer(baseSatellite) && satOffRiverPref;
+  syncingOffRiver = true;
+  if (shouldShow && !map.hasLayer(offRiverLabels)) offRiverLabels.addTo(map);
+  else if (!shouldShow && map.hasLayer(offRiverLabels)) map.removeLayer(offRiverLabels);
+  syncingOffRiver = false;
+  // Control.Layers only repaints checkbox state on its own user-click handler,
+  // so mirror it when we toggle the layer programmatically. offRiverLabels is
+  // the first overlay registered — the control preserves registration order.
+  const input = layerControl.getContainer()
+    .querySelector('.leaflet-control-layers-overlays input[type="checkbox"]');
+  if (input) input.checked = shouldShow;
+}
+map.on('baselayerchange', syncOffRiverToBase);
+map.on('overlayadd overlayremove', (e) => {
+  // Only treat user-driven overlay toggles as a preference change — otherwise
+  // the base-switch auto-hide would wipe the user's choice on every bounce.
+  if (!syncingOffRiver && e.layer === offRiverLabels) {
+    satOffRiverPref = (e.type === 'overlayadd');
+  }
+});
 
 // Auto-fall-back on tile error (handoff §6).
 baseStreets.on('tileerror', () => {
   if (map.hasLayer(baseStreets)) {
     map.removeLayer(baseStreets);
     baseSatellite.addTo(map);
+    syncOffRiverToBase();
   }
 });
+
+// Populate onRiverLabels with town/landmark/lock markers. Called from boot
+// so the layer piggybacks on the fetches that renderLaunches already needs.
+function populateRiverLabels(waypoints, launches) {
+  const place = (lat, lng, text, cls) => {
+    const safe = text ? escapeHtml(text) : '';
+    const html = `<div class="river-label ${cls}"><span class="rl-dot"></span>${safe ? `<span class="rl-txt">${safe}</span>` : ''}</div>`;
+    L.marker([lat, lng], {
+      icon: L.divIcon({ className: '', html, iconSize: [0, 0], iconAnchor: [0, 0] }),
+      interactive: false, keyboard: false,
+    }).addTo(onRiverLabels);
+  };
+  for (const w of waypoints) {
+    if (w.kind === 'lock') continue;
+    const major = w.tier === 'major' || w.kind === 'town';
+    place(w.lat, w.lng, major ? w.name : '', major ? 'place' : 'dot');
+  }
+  for (const l of launches) {
+    if (l.type !== 'lock' || !l.name) continue;
+    place(l.lat, l.lng, l.name.replace(/ Lock$/, ''), 'lock');
+  }
+}
 
 function pinIcon(letter, color) {
   return L.divIcon({
@@ -1106,6 +1167,10 @@ function buildPutIns() {
       ? filterRedundantExtras(state.extras.extras, state.launches.launches)
       : state.extras.extras.slice();
   }
+  const curated = curatedRes && curatedRes.ok ? await curatedRes.json() : null;
+  if (curated && state.launches) {
+    populateRiverLabels(curated.waypoints, state.launches.launches);
+  }
 
   // Build the put-in index: launches with at least one parking nearby. Used
   // both for find-trips filtering and to mute landmark-only launches on the map.
@@ -1128,8 +1193,7 @@ function buildPutIns() {
 
   // Strip view — merges curated + locks + transport, mounts the vertical
   // 1D projection in #tab-strip. Only initialises if the curated data loaded.
-  if (curatedRes && curatedRes.ok && launchesRes && launchesRes.ok) {
-    const curated = await curatedRes.json();
+  if (curated && launchesRes && launchesRes.ok) {
     const transport = transportRes && transportRes.ok ? await transportRes.json() : { transport: [] };
     const waymarks = mergeWaymarks({ curated, transport, launches: state.launches });
     const totalRiverM = state.thames.cum[state.thames.cum.length - 1];
