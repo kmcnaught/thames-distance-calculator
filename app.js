@@ -365,6 +365,7 @@ function pinIcon(letter, color) {
 const PIN_COLOR = { A: '#0b3a5c', B: '#c45c3f' };
 
 map.on('click', (e) => {
+  state.busLayer?.clearPinned();
   const target = [e.latlng.lat, e.latlng.lng];
   setPin(pickSlot(target), target);
 });
@@ -1209,6 +1210,17 @@ function buildPutIns() {
     tryLoadSharedOverlay('./data/accommodation.json', overlays.accommodationLayer, overlays.accommodationLegendHtml(), 'Accommodation'),
     tryLoadSharedOverlay('./data/stations.json',      overlays.stationsLayer,      overlays.stationsLegendHtml(),      'Train stations'),
   ]);
+
+  try {
+    const res = await fetch('./data/bus-routes.json');
+    if (res.ok) {
+      const busData = await res.json();
+      state.busLayer = overlays.busRoutesLayer(busData, (s) => s.along_river_m != null);
+      layerControl.addOverlay(state.busLayer.layer, overlays.labelWithLegend('Bus routes', overlays.busRoutesLegendHtml(busData.meta?.palette)));
+    }
+  } catch (err) {
+    console.warn('[app] bus-routes overlay unavailable:', err.message);
+  }
 
   // Strip view — merges curated + locks + transport, mounts the vertical
   // 1D projection in #tab-strip. Only initialises if the curated data loaded.

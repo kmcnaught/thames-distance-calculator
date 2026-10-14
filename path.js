@@ -43,6 +43,19 @@ async function tryLoadLayer(url, build, legend, name) {
 await tryLoadLayer('./data/accommodation.json', overlays.accommodationLayer, overlays.accommodationLegendHtml(), 'Accommodation');
 await tryLoadLayer('./data/stations.json',      overlays.stationsLayer,      overlays.stationsLegendHtml(),      'Train stations');
 
+let busLayer = null;
+try {
+  const busData = await fetch('./data/bus-routes.json').then((r) => {
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  });
+  busLayer = overlays.busRoutesLayer(busData, (s) => s.along_path_m != null);
+  layerControl.addOverlay(busLayer.layer, overlays.labelWithLegend('Bus routes', overlays.busRoutesLegendHtml(busData.meta?.palette)));
+  console.log(`[path] bus-routes: ${busLayer.nRoutes} routes, ${busLayer.nStops} stops in corridor`);
+} catch (err) {
+  console.warn('[path] bus-routes layer unavailable:', err.message);
+}
+
 const pinStyle = (letter, color) => L.divIcon({
   className: 'tp-pin',
   html: `<div style="background:${color};color:#fff;width:26px;height:26px;border-radius:50%;` +
@@ -119,6 +132,7 @@ function refresh() {
 }
 
 map.on('click', (ev) => {
+  busLayer?.clearPinned();
   // If both pins are placed, move whichever is nearer to the click.
   if (pins.A && pins.B) {
     const target = [ev.latlng.lat, ev.latlng.lng];
