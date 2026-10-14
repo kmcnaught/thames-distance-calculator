@@ -12,6 +12,36 @@
 
 .leaflet-control-layers-overlays label { font-size: 13px; }
 
+/* The × button is appended to the control container by tameLayerControl();
+   show it only when the panel is expanded. */
+.leaflet-control-layers-close {
+  display: none;
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  background: transparent;
+  border: 0;
+  padding: 2px 6px;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  color: #666;
+}
+.leaflet-control-layers-close:hover { color: #000; }
+.leaflet-control-layers-expanded .leaflet-control-layers-close { display: block; }
+
+/* When expanded, give the close button room so it doesn't overlap labels. */
+.leaflet-control-layers-expanded .leaflet-control-layers-list {
+  padding-right: 14px;
+}
+
+/* Overlay rows muted when their checkbox is disabled (e.g. "Place names"
+   while the Streets base map is active). */
+.leaflet-control-layers-overlays label:has(input:disabled) {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .pop { font-size: 13px; line-height: 1.4; }
 .pop .pop-name { font-weight: 600; margin-bottom: 2px; }
 .pop .pop-meta { color: #666; font-size: 12px; }

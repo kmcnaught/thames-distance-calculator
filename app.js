@@ -290,23 +290,31 @@ const layerControl = L.control.layers(
   },
   { position: 'topright', collapsed: true }
 ).addTo(map);
+overlays.tameLayerControl(layerControl);
 
-// OSM street tiles have labels baked in, so Esri place labels would double up
-// on Streets. Auto-hide them there, remember the user's choice, restore on Satellite.
+// OSM street tiles have labels baked in, so Esri place labels would double
+// up on Streets. On Streets we force the layer off AND disable the checkbox
+// so it reads as "not applicable here" rather than "turned off, go toggle".
+// On Satellite we restore whatever preference the user last expressed.
 let satOffRiverPref = true;
 let syncingOffRiver = false;
 function syncOffRiverToBase() {
-  const shouldShow = map.hasLayer(baseSatellite) && satOffRiverPref;
+  const satellite = map.hasLayer(baseSatellite);
+  const shouldShow = satellite && satOffRiverPref;
   syncingOffRiver = true;
   if (shouldShow && !map.hasLayer(offRiverLabels)) offRiverLabels.addTo(map);
   else if (!shouldShow && map.hasLayer(offRiverLabels)) map.removeLayer(offRiverLabels);
   syncingOffRiver = false;
-  // Control.Layers only repaints checkbox state on its own user-click handler,
-  // so mirror it when we toggle the layer programmatically. offRiverLabels is
-  // the first overlay registered — the control preserves registration order.
+  // Mirror checkbox state (Leaflet only repaints on its own click handler),
+  // and disable it on Streets to make the "not available here" visible.
+  // offRiverLabels is the first overlay registered — the control preserves
+  // registration order.
   const input = layerControl.getContainer()
     .querySelector('.leaflet-control-layers-overlays input[type="checkbox"]');
-  if (input) input.checked = shouldShow;
+  if (input) {
+    input.checked = shouldShow;
+    input.disabled = !satellite;
+  }
 }
 map.on('baselayerchange', syncOffRiverToBase);
 map.on('overlayadd overlayremove', (e) => {
@@ -325,6 +333,9 @@ baseStreets.on('tileerror', () => {
     syncOffRiverToBase();
   }
 });
+
+// Reflect initial base-map state (no baselayerchange event fires on first paint).
+syncOffRiverToBase();
 
 // Populate onRiverLabels with town/landmark/lock markers. Called from boot
 // so the layer piggybacks on the fetches that renderLaunches already needs.

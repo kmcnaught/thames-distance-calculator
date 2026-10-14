@@ -23,6 +23,7 @@ map.fitBounds(line.getBounds(), { padding: [40, 40] });
 const highlight = L.polyline([], { color: '#9ac67a', weight: 7, opacity: 0.65 }).addTo(map);
 
 const layerControl = L.control.layers(null, null, { position: 'topright', collapsed: true }).addTo(map);
+overlays.tameLayerControl(layerControl);
 
 async function tryLoadLayer(url, build, legend, name) {
   try {
