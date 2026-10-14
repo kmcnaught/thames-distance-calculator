@@ -7,6 +7,7 @@ Shared helpers for the Thameswise build pipeline. Per the global scripts policy:
 | `geo.mjs` | Re-exports `lib/geo.mjs` — single source of truth for haversine, snap, measure, reachPts, buildCum, simplify. The browser app and the build scripts import the same code. |
 | `overpass.mjs` | POST to Overpass API with mirror fallback + timeout. `await overpass(query)` returns parsed JSON. |
 | `stitch.mjs` | Dijkstra-based stitching of unordered OSM `way` segments into a single ordered channel from the westmost endpoint to a target latlng (used to clip to Teddington Lock). Per THAMES_HANDOFF.md §5. |
+| `diag-stitch.mjs` | Diagnostic — prints the stitch-graph component sizes and bboxes for one named waterway. CLI: `node scripts/utils/diag-stitch.mjs "River Thame"`. Use when a build-tributaries run yields a suspiciously short polyline. |
 | `lookup-curated-coords.mjs` | One-shot resolver for `data/curated-waypoints.json`. Populates each entry with `lat`, `lng`, `along_m`, `offset_m`, `side` by joining locks against `launches.json`, bridges against `bridges.json`, settlements via a cached Overpass `place=*` query, and stragglers via a hand-coded `LANDMARK_COORDS` map inside the script. Dry-run by default; `--write` mutates the JSON. Overpass response is cached to `.overpass-cache-settlements.json` (gitignored) so re-runs don't re-hit the API. |
 
 Build entrypoints live one level up in `scripts/`:
@@ -19,7 +20,7 @@ Build entrypoints live one level up in `scripts/`:
 | `build-parking.mjs` | 3 | OSM `amenity=parking` within 500 m of launches → `data/parking.json` |
 | `build-bridges.mjs` | 2 | OSM `highway+bridge=yes` intersecting the centreline → `data/bridges.json` (used as put-ins) |
 | `build-extras.mjs` | 2 | OSM piers, quays, weirs, ferry terminals snapped to the river → `data/extras.json` |
-| `build-tributaries.mjs` | 2 | OSM named rivers (Cherwell, Kennet, Wey, Mole) + K&A Canal, bbox-clipped, stitched → `data/tributaries.json`. Named rivers get a straight-line stub to their confluence if they end short; canals do not. |
+| `build-tributaries.mjs` | 2 | OSM named rivers (Cherwell, Windrush, Evenlode, Kennet, Loddon, Wey, Mole) + K&A Canal, bbox-clipped, stitched → `data/tributaries.json`. Each entry includes `points`, `cum`, and `length_m` so the browser can snap and measure along it. Named rivers get a straight-line stub to their confluence if they end short; canals do not. |
 | `build-hills.mjs` | 2 | OSM AONBs ("National Landscape") relations — Cotswolds, Chilterns, North Wessex Downs, Surrey Hills — outer rings simplified → `data/hills.json` |
 | `build-counties.mjs` | 2 | OSM `admin_level=6` ceremonial counties around the Thames corridor → `data/counties.json` (dashed boundary lines on the poster) |
 | `build-town-boundaries.mjs` | 2 | OSM `landuse=residential` polygons per town, buffered + unioned via `polygon-clipping` into coalesced blobs (fewer bigger shapes than individual neighbourhoods) → `data/town-boundaries.json`. Also stores a convex hull as fallback. |
