@@ -39,6 +39,12 @@ const EXTRA_STYLE = {
   weir:           { color: '#991b1b', fill: '#fca5a5', radius: 4, weight: 1.5, label: 'Weir (hazard)' },
 };
 
+// Hide piers/quays/weirs/ferries that sit within this along-river distance of a
+// lock or slipway — at that range they're redundant hints for a put-in that's
+// already represented. Raw data in extras.json is untouched; tweak this constant
+// to tighten/loosen the filter.
+const EXTRA_SUPPRESS_RADIUS_M = 0.25 * M_PER_MILE;
+
 const els = {
   hint: document.getElementById('hint'),
   readout: document.getElementById('readout'),
@@ -919,11 +925,25 @@ function renderBridges() {
   layerControl.addOverlay(group, `Bridges (${state.bridges.bridges.length})`);
 }
 
+// Drop extras whose along_m is within EXTRA_SUPPRESS_RADIUS_M of any launch.
+// Both are snapped to the Thames centreline so comparing along_m is exact.
+function filterRedundantExtras(extras, launches) {
+  if (!launches?.length) return extras;
+  const launchAlong = launches.map(l => l.along_m).slice().sort((a, b) => a - b);
+  return extras.filter(e => {
+    for (const a of launchAlong) {
+      if (a > e.along_m + EXTRA_SUPPRESS_RADIUS_M) break;
+      if (Math.abs(a - e.along_m) <= EXTRA_SUPPRESS_RADIUS_M) return false;
+    }
+    return true;
+  });
+}
+
 function renderExtras() {
   if (!state.extras) return;
   const renderer = L.svg();
   const group = L.layerGroup();
-  for (const e of state.extras.extras) {
+  for (const e of state.extras.shown) {
     const style = EXTRA_STYLE[e.category];
     if (!style) continue;
     const marker = L.circleMarker([e.snap_lat, e.snap_lng], {
@@ -951,7 +971,7 @@ function renderExtras() {
   }
   state.layers.extras = group;
   group.addTo(map);
-  layerControl.addOverlay(group, `Piers · quays · weirs · ferries (${state.extras.extras.length})`);
+  layerControl.addOverlay(group, `Piers · quays · weirs · ferries (${state.extras.shown.length})`);
 }
 
 // Build the unified put-in list across all sources, sorted by along_m.
@@ -989,7 +1009,7 @@ function buildPutIns() {
     }
   }
   if (state.extras) {
-    for (const e of state.extras.extras) {
+    for (const e of state.extras.shown) {
       if (e.role !== 'put_in') continue;
       list.push({
         snap_lat: e.snap_lat,
@@ -1080,7 +1100,12 @@ function buildPutIns() {
   if (campsitesRes && campsitesRes.ok) state.campsites = await campsitesRes.json();
   if (parkingRes && parkingRes.ok) state.parking = await parkingRes.json();
   if (bridgesRes && bridgesRes.ok) state.bridges = await bridgesRes.json();
-  if (extrasRes && extrasRes.ok) state.extras = await extrasRes.json();
+  if (extrasRes && extrasRes.ok) {
+    state.extras = await extrasRes.json();
+    state.extras.shown = state.launches
+      ? filterRedundantExtras(state.extras.extras, state.launches.launches)
+      : state.extras.extras.slice();
+  }
 
   // Build the put-in index: launches with at least one parking nearby. Used
   // both for find-trips filtering and to mute landmark-only launches on the map.
