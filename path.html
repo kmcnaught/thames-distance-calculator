@@ -39,13 +39,14 @@
       color: #fff; text-align: center; line-height: 18px; font-size: 11px; font-weight: 700; }
     .pin-a { background: #e11d48; }
     .pin-b { background: #0891b2; }
-    .layer-toggle { margin-top: 10px; font-size: 13px; color: #333; display: flex; align-items: center; gap: 6px; }
-    .layer-toggle input { margin: 0; }
     .band-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
-    .accom-popup { font-size: 13px; line-height: 1.35; }
-    .accom-popup .accom-name { font-weight: 600; margin-bottom: 2px; }
-    .accom-popup .accom-meta { color: #666; font-size: 12px; }
-    .accom-popup .accom-band { margin-top: 4px; font-size: 12px; }
+    .leaflet-control-layers-overlays label { font-size: 13px; }
+    .pop { font-size: 13px; line-height: 1.4; }
+    .pop .pop-name { font-weight: 600; margin-bottom: 2px; }
+    .pop .pop-meta { color: #666; font-size: 12px; }
+    .pop .pop-band { margin-top: 4px; font-size: 12px; }
+    .pop a { color: #2d5016; text-decoration: underline; }
+    .pop .pop-link { margin-top: 4px; font-size: 12px; display: inline-block; word-break: break-all; }
     .attr { margin-top: 10px; font-size: 11px; color: #888; }
     .attr a { color: #888; }
   </style>
@@ -67,16 +68,6 @@
       <button id="btn-swap" disabled>Swap A ↔ B</button>
       <button id="btn-clear" disabled>Clear</button>
     </div>
-    <label class="layer-toggle">
-      <input type="checkbox" id="toggle-accom" />
-      Show accommodation
-      <span style="margin-left:auto; color:#888; font-size:11px;">
-        <span class="band-swatch" style="background:#2a7d2a"></span>£
-        <span class="band-swatch" style="background:#c08020"></span>££
-        <span class="band-swatch" style="background:#c45c3f"></span>£££
-        <span class="band-swatch" style="background:#7c3aed"></span>££££
-      </span>
-    </label>
     <div class="attr">
       Trail from OSM relation 14519665 (© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors, ODbL).
     </div>

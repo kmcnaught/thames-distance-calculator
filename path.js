@@ -21,9 +21,8 @@ map.fitBounds(line.getBounds(), { padding: [40, 40] });
 
 const highlight = L.polyline([], { color: '#9ac67a', weight: 7, opacity: 0.65 }).addTo(map);
 
-// Accommodation layer — colored circle markers banded by cheap-OSM-tag proxy.
-// Band → colour map and human-readable labels are kept in one place so the
-// legend swatches in path.html can be eyeballed against the markers.
+// Accommodation banding — colours match the inline £ swatches used in the
+// overlay-picker label below.
 const BAND_COLOR = {
   cheap:        '#2a7d2a',
   medium:       '#c08020',
@@ -45,36 +44,16 @@ const TYPE_LABEL = {
   chalet: 'chalet',
 };
 
-const accomLayer = L.layerGroup();
-try {
-  const accomData = await fetch('./data/path-accommodation.json').then((r) => {
-    if (!r.ok) throw new Error(`accommodation fetch: ${r.status}`);
-    return r.json();
-  });
-  for (const a of accomData.accommodation) {
-    const marker = L.circleMarker([a.lat, a.lng], {
-      radius: 5,
-      color: '#fff',
-      weight: 1,
-      fillColor: BAND_COLOR[a.band] || '#888',
-      fillOpacity: 0.9,
-    });
-    const nameHtml = a.name ? escapeHtml(a.name) : '<em>unnamed</em>';
-    const typeHtml = escapeHtml(TYPE_LABEL[a.type] || a.type);
-    const bandHtml = escapeHtml(BAND_LABEL[a.band] || a.band);
-    marker.bindPopup(
-      `<div class="accom-popup">
-        <div class="accom-name">${nameHtml}</div>
-        <div class="accom-meta">${typeHtml}</div>
-        <div class="accom-band"><span class="band-swatch" style="background:${BAND_COLOR[a.band] || '#888'}"></span>${bandHtml}</div>
-      </div>`
-    );
-    marker.addTo(accomLayer);
-  }
-  console.log(`[path] loaded ${accomData.accommodation.length} accommodations`);
-} catch (err) {
-  console.warn('[path] accommodation layer unavailable:', err.message);
-}
+const NETWORK_COLOR = {
+  rail:       '#1e40af',
+  tube:       '#dc2626',
+  light_rail: '#0d9488',
+};
+const NETWORK_LABEL = {
+  rail: 'rail',
+  tube: 'tube',
+  light_rail: 'DLR / light rail',
+};
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({
@@ -82,10 +61,84 @@ function escapeHtml(s) {
   }[c]));
 }
 
-el('toggle-accom').addEventListener('change', (ev) => {
-  if (ev.target.checked) accomLayer.addTo(map);
-  else accomLayer.remove();
+function hostnameOf(url) {
+  try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; }
+}
+
+const accomLayer = L.layerGroup();
+try {
+  const accomData = await fetch('./data/path-accommodation.json').then((r) => {
+    if (!r.ok) throw new Error(`accommodation fetch: ${r.status}`);
+    return r.json();
+  });
+  for (const a of accomData.accommodation) {
+    const color = BAND_COLOR[a.band] || '#888';
+    const marker = L.circleMarker([a.lat, a.lng], {
+      radius: 5, color: '#fff', weight: 1, fillColor: color, fillOpacity: 0.9,
+    });
+    const parts = [];
+    parts.push(`<div class="pop-name">${a.name ? escapeHtml(a.name) : '<em>unnamed</em>'}</div>`);
+    parts.push(`<div class="pop-meta">${escapeHtml(TYPE_LABEL[a.type] || a.type)}</div>`);
+    parts.push(`<div class="pop-band"><span class="band-swatch" style="background:${color}"></span>${escapeHtml(BAND_LABEL[a.band] || a.band)}</div>`);
+    if (a.website) {
+      parts.push(`<a class="pop-link" href="${escapeHtml(a.website)}" target="_blank" rel="noopener">${escapeHtml(hostnameOf(a.website))}</a>`);
+    }
+    marker.bindPopup(`<div class="pop">${parts.join('')}</div>`);
+    marker.addTo(accomLayer);
+  }
+  console.log(`[path] loaded ${accomData.accommodation.length} accommodations`);
+} catch (err) {
+  console.warn('[path] accommodation layer unavailable:', err.message);
+}
+
+const stationIcon = (color) => L.divIcon({
+  className: 'tp-station-pin',
+  html: `<div style="background:${color};color:#fff;width:18px;height:18px;border-radius:3px;` +
+        `display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;` +
+        `font-family:system-ui,sans-serif;line-height:1;` +
+        `border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3);">T</div>`,
+  iconSize: [18, 18], iconAnchor: [9, 9],
 });
+
+const stationsLayer = L.layerGroup();
+try {
+  const sData = await fetch('./data/path-stations.json').then((r) => {
+    if (!r.ok) throw new Error(`stations fetch: ${r.status}`);
+    return r.json();
+  });
+  for (const s of sData.stations) {
+    const color = NETWORK_COLOR[s.network] || '#555';
+    const marker = L.marker([s.lat, s.lng], { icon: stationIcon(color) });
+    const parts = [];
+    parts.push(`<div class="pop-name">${s.name ? escapeHtml(s.name) : '<em>unnamed station</em>'}</div>`);
+    parts.push(`<div class="pop-meta">${escapeHtml(NETWORK_LABEL[s.network] || s.network)}${s.operator ? ' · ' + escapeHtml(s.operator) : ''}</div>`);
+    if (s.website) {
+      parts.push(`<a class="pop-link" href="${escapeHtml(s.website)}" target="_blank" rel="noopener">${escapeHtml(hostnameOf(s.website))}</a>`);
+    }
+    marker.bindPopup(`<div class="pop">${parts.join('')}</div>`);
+    marker.addTo(stationsLayer);
+  }
+  console.log(`[path] loaded ${sData.stations.length} stations`);
+} catch (err) {
+  console.warn('[path] stations layer unavailable:', err.message);
+}
+
+// Legend-in-label: tiny coloured swatches sit next to each overlay name so
+// the band / network colouring is self-explanatory from the picker.
+const accomSwatches =
+  `<span class="band-swatch" style="background:${BAND_COLOR.cheap}"></span>£` +
+  `<span class="band-swatch" style="background:${BAND_COLOR.medium};margin-left:4px"></span>££` +
+  `<span class="band-swatch" style="background:${BAND_COLOR.medium_pricy};margin-left:4px"></span>£££` +
+  `<span class="band-swatch" style="background:${BAND_COLOR.pricy};margin-left:4px"></span>££££`;
+const stationSwatches =
+  `<span class="band-swatch" style="background:${NETWORK_COLOR.rail}"></span>rail` +
+  `<span class="band-swatch" style="background:${NETWORK_COLOR.tube};margin-left:4px"></span>tube` +
+  `<span class="band-swatch" style="background:${NETWORK_COLOR.light_rail};margin-left:4px"></span>DLR`;
+
+L.control.layers(null, {
+  [`Accommodation &nbsp; <span style="color:#888">${accomSwatches}</span>`]: accomLayer,
+  [`Train stations &nbsp; <span style="color:#888">${stationSwatches}</span>`]: stationsLayer,
+}, { position: 'topright', collapsed: true }).addTo(map);
 
 const pinStyle = (letter, color) => L.divIcon({
   className: 'tp-pin',
