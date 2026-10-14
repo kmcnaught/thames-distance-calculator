@@ -372,20 +372,29 @@ map.on('click', (e) => {
   const dx = e.containerPoint.x - lastTap.x;
   const dy = e.containerPoint.y - lastTap.y;
   if (now - lastTap.t < 350 && Math.hypot(dx, dy) < 30) {
-    setPin(state.next, [e.latlng.lat, e.latlng.lng]);
+    const target = [e.latlng.lat, e.latlng.lng];
+    setPin(pickSlot(target), target);
     lastTap = { t: 0, x: 0, y: 0 };
     return;
   }
   lastTap = { t: now, x: e.containerPoint.x, y: e.containerPoint.y };
 });
 
+// Which slot a double-tap fills: an empty one first, otherwise whichever
+// existing pin is closer to the tap. Dragging or clicking a specific pin
+// remains the way to override.
+function pickSlot(target) {
+  const { A, B } = state.pins;
+  if (A == null) return 'A';
+  if (B == null) return 'B';
+  return haversine(target, A) <= haversine(target, B) ? 'A' : 'B';
+}
+
 function setPin(slot, latlng) {
   state.pins[slot] = latlng;
   drawPin(slot);
-  // Auto-advance only fills empty slots: A → B once. After both pins exist,
-  // state.next is sticky so further double-clicks keep refining the same pin
-  // (the "anchor + scout" model). The user flips slots by clicking the
-  // next-pin chip or by clicking an existing pin on the map.
+  // state.next drives the next-pin chip and the single-empty-slot case.
+  // Once both pins exist, pickSlot() takes over and nearest-to-tap wins.
   if (state.pins.A == null) state.next = 'A';
   else if (state.pins.B == null) state.next = 'B';
   syncNextSlotUI();
