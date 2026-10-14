@@ -4,6 +4,7 @@
 
 import { snap, haversine } from './lib/geo.mjs';
 import { mergeWaymarks } from './lib/waymarks.mjs';
+import * as overlays from './lib/overlays.mjs';
 import { initStrip } from './strip.js';
 
 const M_PER_MILE = 1609.344;
@@ -953,6 +954,20 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+async function tryLoadSharedOverlay(url, build, legendHtml, name) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const d = await res.json();
+    const raw = d.accommodation ?? d.stations ?? [];
+    const items = overlays.nearRiver(raw);
+    const group = build(items);
+    layerControl.addOverlay(group, overlays.labelWithLegend(name, legendHtml));
+  } catch (err) {
+    console.warn(`[app] ${name.toLowerCase()} overlay unavailable:`, err.message);
+  }
+}
+
 function renderBridges() {
   if (!state.bridges) return;
   const renderer = L.svg();
@@ -1187,6 +1202,13 @@ function buildPutIns() {
   renderBridges();
   renderExtras();
   buildPutIns();
+
+  // Shared accommodation + stations overlays — same lib and data shape as the
+  // Thames Path page, just a different corridor's JSON.
+  await Promise.all([
+    tryLoadSharedOverlay('./data/accommodation.json', overlays.accommodationLayer, overlays.accommodationLegendHtml(), 'Accommodation'),
+    tryLoadSharedOverlay('./data/stations.json',      overlays.stationsLayer,      overlays.stationsLegendHtml(),      'Train stations'),
+  ]);
 
   // Strip view — merges curated + locks + transport, mounts the vertical
   // 1D projection in #tab-strip. Only initialises if the curated data loaded.

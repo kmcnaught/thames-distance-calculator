@@ -1,0 +1,25 @@
+/* Shared styles for the accommodation + stations overlays — imported by
+   both the river app (via app.css) and the path page (via path.html). */
+
+.band-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.leaflet-control-layers-overlays label { font-size: 13px; }
+
+.pop { font-size: 13px; line-height: 1.4; }
+.pop .pop-name { font-weight: 600; margin-bottom: 2px; }
+.pop .pop-meta { color: #666; font-size: 12px; }
+.pop .pop-band { margin-top: 4px; font-size: 12px; }
+.pop a { color: #2d5016; text-decoration: underline; }
+.pop .pop-link {
+  margin-top: 4px;
+  font-size: 12px;
+  display: inline-block;
+  word-break: break-all;
+}

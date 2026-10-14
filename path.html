@@ -7,6 +7,7 @@
   <title>Thames Path — on-trail distance</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="./lib/overlays.css" />
   <style>
     html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
     #map { position: absolute; inset: 0; }
@@ -39,14 +40,6 @@
       color: #fff; text-align: center; line-height: 18px; font-size: 11px; font-weight: 700; }
     .pin-a { background: #e11d48; }
     .pin-b { background: #0891b2; }
-    .band-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
-    .leaflet-control-layers-overlays label { font-size: 13px; }
-    .pop { font-size: 13px; line-height: 1.4; }
-    .pop .pop-name { font-weight: 600; margin-bottom: 2px; }
-    .pop .pop-meta { color: #666; font-size: 12px; }
-    .pop .pop-band { margin-top: 4px; font-size: 12px; }
-    .pop a { color: #2d5016; text-decoration: underline; }
-    .pop .pop-link { margin-top: 4px; font-size: 12px; display: inline-block; word-break: break-all; }
     .attr { margin-top: 10px; font-size: 11px; color: #888; }
     .attr a { color: #888; }
   </style>
