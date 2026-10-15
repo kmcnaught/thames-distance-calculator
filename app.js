@@ -375,9 +375,17 @@ function pinIcon(letter, color) {
 
 const PIN_COLOR = { A: '#0b3a5c', B: '#c45c3f' };
 
+// Only drop a pin when the tap is visually close to a waterway — otherwise a
+// stray tap on a far-away part of the map silently snaps a pin onto the river.
+const TAP_SNAP_PX = 40;
 map.on('click', (e) => {
   state.busLayer?.clearPinned();
   const target = [e.latlng.lat, e.latlng.lng];
+  if (!state.waterways.length) return;
+  const s = snapAny(target);
+  if (!s) return;
+  const snappedPt = map.latLngToContainerPoint(L.latLng(s.snap.latlng[0], s.snap.latlng[1]));
+  if (snappedPt.distanceTo(e.containerPoint) > TAP_SNAP_PX) return;
   setPin(pickSlot(target), target);
 });
 
@@ -478,15 +486,15 @@ function refresh() {
 
   if (!hasA && !hasB) {
     els.hint.hidden = false;
-    els.hint.textContent = 'Click the map to drop pin A.';
+    els.hint.textContent = 'Click the river to drop pin A.';
     els.readout.hidden = true;
   } else if (hasA && !hasB) {
     els.hint.hidden = false;
-    els.hint.textContent = 'Click the map to drop pin B.';
+    els.hint.textContent = 'Click the river to drop pin B.';
     els.readout.hidden = true;
   } else if (hasB && !hasA) {
     els.hint.hidden = false;
-    els.hint.textContent = 'Click the map to drop pin A.';
+    els.hint.textContent = 'Click the river to drop pin A.';
     els.readout.hidden = true;
   } else {
     els.hint.hidden = true;
