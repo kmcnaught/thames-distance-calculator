@@ -152,6 +152,25 @@ export function initStrip({
     cursorEl.style.top = y + 'px';
     const mi = (state.cursorM / M_PER_MILE).toFixed(1);
     cursorLabel.textContent = `${mi} mi`;
+    cursorEl.setAttribute('aria-valuenow', mi);
+    cursorEl.setAttribute('aria-valuetext', `${mi} miles along river`);
+  }
+
+  // Pan the viewport if the cursor would otherwise sit outside (or flush
+  // against) the visible range — keeps the focus ring on screen when the
+  // keyboard moves the cursor past the current window. Short-river case:
+  // when the whole river fits in view the centre is fixed, so skip the pan.
+  function ensureCursorVisible() {
+    if (totalRiverM <= rangeM()) return;
+    const pad = rangeM() * 0.1;
+    const halfR = rangeM() / 2;
+    const minCentre = halfR;
+    const maxCentre = totalRiverM - halfR;
+    if (state.cursorM < startM() + pad) {
+      state.centreM = clamp(state.cursorM + halfR - pad, minCentre, maxCentre);
+    } else if (state.cursorM > endM() - pad) {
+      state.centreM = clamp(state.cursorM - halfR + pad, minCentre, maxCentre);
+    }
   }
 
   // --- interactions ---
@@ -170,6 +189,7 @@ export function initStrip({
   });
   viewport.addEventListener('pointermove', (e) => {
     if (!panning) return;
+    if (totalRiverM <= rangeM()) return;  // whole river fits — nothing to pan
     const dy = e.clientY - panning.startY;
     const dm = -dy / pxPerM();  // dragging down pans upstream (view shows lower along_m)
     state.centreM = clamp(panning.startCentre + dm, rangeM() / 2, totalRiverM - rangeM() / 2);
@@ -197,6 +217,31 @@ export function initStrip({
   });
   cursorEl.addEventListener('pointerup', () => { cursorDrag = false; });
   cursorEl.addEventListener('pointercancel', () => { cursorDrag = false; });
+
+  // Keyboard support for the slider. Arrow keys step ~0.1 mi (small nudge
+  // ≈ 160 m), Page keys step 1 mi, Home/End jump to the river ends. Vertical
+  // orientation: Down = downstream (increasing along_m).
+  const STEP_SMALL_M = 0.1 * M_PER_MILE;
+  const STEP_LARGE_M = M_PER_MILE;
+  cursorEl.setAttribute('aria-valuemax', (totalRiverM / M_PER_MILE).toFixed(1));
+  cursorEl.addEventListener('keydown', (e) => {
+    let next = state.cursorM;
+    switch (e.key) {
+      case 'ArrowDown':
+      case 'ArrowRight': next += STEP_SMALL_M; break;
+      case 'ArrowUp':
+      case 'ArrowLeft':  next -= STEP_SMALL_M; break;
+      case 'PageDown':   next += STEP_LARGE_M; break;
+      case 'PageUp':     next -= STEP_LARGE_M; break;
+      case 'Home':       next = 0; break;
+      case 'End':        next = totalRiverM; break;
+      default: return;
+    }
+    e.preventDefault();
+    state.cursorM = clamp(next, 0, totalRiverM);
+    ensureCursorVisible();
+    render();
+  });
 
   // Ensure a first render happens once the tab is visible (offsetHeight is 0
   // for hidden panels, so pxPerM would divide by zero — defer until shown).

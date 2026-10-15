@@ -780,13 +780,22 @@ function renderFinderResults(results) {
       <div class="result-meta">${distTxt}${r.camp ? ` · campsite ${escapeHtml(r.camp.camp.name || 'unnamed')}` : ''}${campTxt}${parkTxt}</div>
       ${oxLine}
     `;
-    li.addEventListener('click', () => {
+    li.tabIndex = 0;
+    li.setAttribute('role', 'button');
+    const activate = () => {
       clearPin('A'); clearPin('B');
       setPin('A', [A.snap_lat, A.snap_lng]);
       setPin('B', [B.snap_lat, B.snap_lng]);
       map.fitBounds([[A.snap_lat, A.snap_lng], [B.snap_lat, B.snap_lng]], { padding: [40, 40] });
       // Switch back to Measure tab so user sees the readout
       document.querySelector('.tab[data-tab="measure"]').click();
+    };
+    li.addEventListener('click', activate);
+    li.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        activate();
+      }
     });
     els.findResults.appendChild(li);
   });

@@ -71,13 +71,13 @@
             <output id="find-dist-out" class="field-value">8 mi ± 1.5 mi</output>
           </label>
           <div class="dual-range">
-            <input id="find-target" type="range" min="3" max="25" step="0.5" value="8" />
-            <input id="find-tol"    type="range" min="0" max="5"  step="0.5" value="1.5" />
+            <input id="find-target" type="range" min="3" max="25" step="0.5" value="8" aria-label="Target trip distance" />
+            <input id="find-tol"    type="range" min="0" max="5"  step="0.5" value="1.5" aria-label="Trip distance tolerance" />
           </div>
         </div>
 
         <div class="field">
-          <label class="field-label">
+          <label class="field-label" for="find-walk">
             Campsite within
             <output id="find-walk-out" class="field-value">1.0 km</output>
           </label>
@@ -99,7 +99,7 @@
         </div>
 
         <div class="field">
-          <label class="field-label">
+          <label class="field-label" for="find-oxford">
             Trip end within
             <output id="find-oxford-out" class="field-value">15 mi of Oxford</output>
           </label>
@@ -116,7 +116,7 @@
 
       <section id="tab-strip" class="tab-panel" role="tabpanel" hidden>
         <div class="strip-controls">
-          <label class="field-label" style="margin-bottom: 4px;">
+          <label class="field-label" for="strip-scale" style="margin-bottom: 4px;">
             Scale
             <output id="strip-scale-out" class="field-value">10 mi in view</output>
           </label>
@@ -125,7 +125,7 @@
         <div id="strip-viewport" class="strip-viewport" aria-label="River waymark strip">
           <div id="strip-axis" class="strip-axis"></div>
           <div id="strip-waymarks" class="strip-waymarks"></div>
-          <div id="strip-cursor" class="strip-cursor" role="slider" aria-label="Position on river" tabindex="0">
+          <div id="strip-cursor" class="strip-cursor" role="slider" aria-label="Position on river" aria-orientation="vertical" aria-valuemin="0" tabindex="0">
             <span class="strip-cursor-label">—</span>
           </div>
         </div>
