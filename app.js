@@ -4,6 +4,7 @@
 
 import { snap, haversine } from './lib/geo.mjs';
 import { mergeWaymarks } from './lib/waymarks.mjs';
+import * as overlays from './lib/overlays.mjs';
 import { initStrip } from './strip.js';
 
 const M_PER_MILE = 1609.344;
@@ -289,23 +290,31 @@ const layerControl = L.control.layers(
   },
   { position: 'topright', collapsed: true }
 ).addTo(map);
+overlays.tameLayerControl(layerControl);
 
-// OSM street tiles have labels baked in, so Esri place labels would double up
-// on Streets. Auto-hide them there, remember the user's choice, restore on Satellite.
+// OSM street tiles have labels baked in, so Esri place labels would double
+// up on Streets. On Streets we force the layer off AND disable the checkbox
+// so it reads as "not applicable here" rather than "turned off, go toggle".
+// On Satellite we restore whatever preference the user last expressed.
 let satOffRiverPref = true;
 let syncingOffRiver = false;
 function syncOffRiverToBase() {
-  const shouldShow = map.hasLayer(baseSatellite) && satOffRiverPref;
+  const satellite = map.hasLayer(baseSatellite);
+  const shouldShow = satellite && satOffRiverPref;
   syncingOffRiver = true;
   if (shouldShow && !map.hasLayer(offRiverLabels)) offRiverLabels.addTo(map);
   else if (!shouldShow && map.hasLayer(offRiverLabels)) map.removeLayer(offRiverLabels);
   syncingOffRiver = false;
-  // Control.Layers only repaints checkbox state on its own user-click handler,
-  // so mirror it when we toggle the layer programmatically. offRiverLabels is
-  // the first overlay registered — the control preserves registration order.
+  // Mirror checkbox state (Leaflet only repaints on its own click handler),
+  // and disable it on Streets to make the "not available here" visible.
+  // offRiverLabels is the first overlay registered — the control preserves
+  // registration order.
   const input = layerControl.getContainer()
     .querySelector('.leaflet-control-layers-overlays input[type="checkbox"]');
-  if (input) input.checked = shouldShow;
+  if (input) {
+    input.checked = shouldShow;
+    input.disabled = !satellite;
+  }
 }
 map.on('baselayerchange', syncOffRiverToBase);
 map.on('overlayadd overlayremove', (e) => {
@@ -324,6 +333,9 @@ baseStreets.on('tileerror', () => {
     syncOffRiverToBase();
   }
 });
+
+// Reflect initial base-map state (no baselayerchange event fires on first paint).
+syncOffRiverToBase();
 
 // Populate onRiverLabels with town/landmark/lock markers. Called from boot
 // so the layer piggybacks on the fetches that renderLaunches already needs.
@@ -363,29 +375,27 @@ function pinIcon(letter, color) {
 
 const PIN_COLOR = { A: '#0b3a5c', B: '#c45c3f' };
 
-// Manual double-tap detector. Leaflet's dblclick is unreliable on iOS Safari —
-// the second tap is often consumed by the OS even with doubleClickZoom off.
-// Two click events within 350 ms / 30 px works uniformly for mouse and touch.
-let lastTap = { t: 0, x: 0, y: 0 };
 map.on('click', (e) => {
-  const now = Date.now();
-  const dx = e.containerPoint.x - lastTap.x;
-  const dy = e.containerPoint.y - lastTap.y;
-  if (now - lastTap.t < 350 && Math.hypot(dx, dy) < 30) {
-    setPin(state.next, [e.latlng.lat, e.latlng.lng]);
-    lastTap = { t: 0, x: 0, y: 0 };
-    return;
-  }
-  lastTap = { t: now, x: e.containerPoint.x, y: e.containerPoint.y };
+  state.busLayer?.clearPinned();
+  const target = [e.latlng.lat, e.latlng.lng];
+  setPin(pickSlot(target), target);
 });
+
+// Which slot a tap fills: an empty one first, otherwise whichever existing
+// pin is closer to the tap. Dragging or clicking a specific pin remains the
+// way to override.
+function pickSlot(target) {
+  const { A, B } = state.pins;
+  if (A == null) return 'A';
+  if (B == null) return 'B';
+  return haversine(target, A) <= haversine(target, B) ? 'A' : 'B';
+}
 
 function setPin(slot, latlng) {
   state.pins[slot] = latlng;
   drawPin(slot);
-  // Auto-advance only fills empty slots: A → B once. After both pins exist,
-  // state.next is sticky so further double-clicks keep refining the same pin
-  // (the "anchor + scout" model). The user flips slots by clicking the
-  // next-pin chip or by clicking an existing pin on the map.
+  // state.next drives the next-pin chip and the single-empty-slot case.
+  // Once both pins exist, pickSlot() takes over and nearest-to-tap wins.
   if (state.pins.A == null) state.next = 'A';
   else if (state.pins.B == null) state.next = 'B';
   syncNextSlotUI();
@@ -468,15 +478,15 @@ function refresh() {
 
   if (!hasA && !hasB) {
     els.hint.hidden = false;
-    els.hint.textContent = 'Double-tap the map to drop pin A.';
+    els.hint.textContent = 'Click the map to drop pin A.';
     els.readout.hidden = true;
   } else if (hasA && !hasB) {
     els.hint.hidden = false;
-    els.hint.textContent = 'Double-tap the map to drop pin B.';
+    els.hint.textContent = 'Click the map to drop pin B.';
     els.readout.hidden = true;
   } else if (hasB && !hasA) {
     els.hint.hidden = false;
-    els.hint.textContent = 'Double-tap the map to drop pin A.';
+    els.hint.textContent = 'Click the map to drop pin A.';
     els.readout.hidden = true;
   } else {
     els.hint.hidden = true;
@@ -965,6 +975,20 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+async function tryLoadSharedOverlay(url, build, legendHtml, name) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const d = await res.json();
+    const raw = d.accommodation ?? d.stations ?? [];
+    const items = overlays.nearRiver(raw);
+    const group = build(items);
+    layerControl.addOverlay(group, overlays.labelWithLegend(name, legendHtml));
+  } catch (err) {
+    console.warn(`[app] ${name.toLowerCase()} overlay unavailable:`, err.message);
+  }
+}
+
 function renderBridges() {
   if (!state.bridges) return;
   const renderer = L.svg();
@@ -1199,6 +1223,24 @@ function buildPutIns() {
   renderBridges();
   renderExtras();
   buildPutIns();
+
+  // Shared accommodation + stations overlays — same lib and data shape as the
+  // Thames Path page, just a different corridor's JSON.
+  await Promise.all([
+    tryLoadSharedOverlay('./data/accommodation.json', overlays.accommodationLayer, overlays.accommodationLegendHtml(), 'Accommodation'),
+    tryLoadSharedOverlay('./data/stations.json',      overlays.stationsLayer,      overlays.stationsLegendHtml(),      'Train stations'),
+  ]);
+
+  try {
+    const res = await fetch('./data/bus-routes.json');
+    if (res.ok) {
+      const busData = await res.json();
+      state.busLayer = overlays.busRoutesLayer(busData, (s) => s.along_river_m != null);
+      layerControl.addOverlay(state.busLayer.layer, overlays.labelWithLegend('Bus routes', overlays.busRoutesLegendHtml(busData.meta?.palette)));
+    }
+  } catch (err) {
+    console.warn('[app] bus-routes overlay unavailable:', err.message);
+  }
 
   // Strip view — merges curated + locks + transport, mounts the vertical
   // 1D projection in #tab-strip. Only initialises if the curated data loaded.

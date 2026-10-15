@@ -1,0 +1,55 @@
+/* Shared styles for the accommodation + stations overlays — imported by
+   both the river app (via app.css) and the path page (via path.html). */
+
+.band-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.leaflet-control-layers-overlays label { font-size: 13px; }
+
+/* The × button is appended to the control container by tameLayerControl();
+   show it only when the panel is expanded. */
+.leaflet-control-layers-close {
+  display: none;
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  background: transparent;
+  border: 0;
+  padding: 2px 6px;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  color: #666;
+}
+.leaflet-control-layers-close:hover { color: #000; }
+.leaflet-control-layers-expanded .leaflet-control-layers-close { display: block; }
+
+/* When expanded, give the close button room so it doesn't overlap labels. */
+.leaflet-control-layers-expanded .leaflet-control-layers-list {
+  padding-right: 14px;
+}
+
+/* Overlay rows muted when their checkbox is disabled (e.g. "Place names"
+   while the Streets base map is active). */
+.leaflet-control-layers-overlays label:has(input:disabled) {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pop { font-size: 13px; line-height: 1.4; }
+.pop .pop-name { font-weight: 600; margin-bottom: 2px; }
+.pop .pop-meta { color: #666; font-size: 12px; }
+.pop .pop-band { margin-top: 4px; font-size: 12px; }
+.pop a { color: #2d5016; text-decoration: underline; }
+.pop .pop-link {
+  margin-top: 4px;
+  font-size: 12px;
+  display: inline-block;
+  word-break: break-all;
+}
