@@ -6,8 +6,7 @@
 import { snap, haversine } from './lib/geo.mjs';
 import * as overlays from './lib/overlays.mjs';
 import { createCorridor } from './lib/corridor.mjs';
-
-const M_PER_MILE = 1609.344;
+import { UNITS, inUnit, fmtDist, altUnit, createUnitToggle } from './lib/units.mjs';
 
 const el = (id) => document.getElementById(id);
 const map = L.map('map', { zoomControl: true });
@@ -69,6 +68,12 @@ const corridor = createCorridor({
   onChange: refresh,
 });
 
+const unitToggle = createUnitToggle({
+  checkbox: el('units-km'),
+  storageKey: 'thamespath.unitsKm',
+  onChange: refresh,
+});
+
 // Clear any pinned bus route whenever the user interacts with the map.
 map.on('click', () => busLayer?.clearPinned());
 
@@ -95,9 +100,12 @@ function refresh() {
   el('btn-swap').disabled = false;
   const trailM = Math.abs(A.snap.along - B.snap.along);
   const straightM = haversine(A.snap.latlng, B.snap.latlng);
-  el('miles').textContent = (trailM / M_PER_MILE).toFixed(2);
-  el('km').textContent = `${(trailM / 1000).toFixed(2)} km`;
-  el('straight').textContent = `${(straightM / 1000).toFixed(2)} km straight`;
+  const u = unitToggle.activeUnit();
+  const au = altUnit(u);
+  el('dist-primary').textContent = inUnit(trailM, u).toFixed(2);
+  el('dist-primary-unit').textContent = `${UNITS[u].label} on the trail`;
+  el('dist-secondary').textContent = fmtDist(trailM, 2, au);
+  el('dist-straight').textContent = `${fmtDist(straightM, 2, u)} straight`;
   el('readout').hidden = false;
 
   const maxOff = Math.max(A.snap.off, B.snap.off);

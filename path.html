@@ -36,6 +36,8 @@
       border-radius: 6px; cursor: pointer; font-size: 14px;
     }
     .actions button:disabled { opacity: .4; cursor: not-allowed; }
+    .check { display: flex; align-items: center; gap: 6px; font-size: 13px;
+      color: #555; margin-top: 10px; cursor: pointer; }
     .pin-chip { display: inline-block; width: 18px; height: 18px; border-radius: 50%;
       color: #fff; text-align: center; line-height: 18px; font-size: 11px; font-weight: 700; }
     .pin-a { background: #e11d48; }
@@ -51,9 +53,12 @@
   <section id="panel">
     <p id="hint">Click the map to drop pin <span class="pin-chip pin-a">A</span>.</p>
     <div id="readout" hidden>
-      <div><span id="miles" class="big">—</span><span class="unit">mi on the trail</span></div>
+      <div>
+        <span id="dist-primary" class="big">—</span>
+        <span id="dist-primary-unit" class="unit">mi on the trail</span>
+      </div>
       <div class="secondary">
-        <span id="km">— km</span> · <span id="straight">— straight</span>
+        <span id="dist-secondary">—</span> · <span id="dist-straight">—</span>
       </div>
       <p id="warn" class="warn" hidden></p>
     </div>
@@ -61,6 +66,7 @@
       <button id="btn-swap" disabled>Swap A ↔ B</button>
       <button id="btn-clear" disabled>Clear</button>
     </div>
+    <label class="check"><input id="units-km" type="checkbox" /> Show distances in km (default: miles)</label>
     <div class="attr">
       Trail from OSM relation 14519665 (© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors, ODbL).
     </div>

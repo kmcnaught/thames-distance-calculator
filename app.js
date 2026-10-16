@@ -6,15 +6,17 @@ import { snap, haversine } from './lib/geo.mjs';
 import { mergeWaymarks } from './lib/waymarks.mjs';
 import * as overlays from './lib/overlays.mjs';
 import { createCorridor, pickSlot, copyShareLink } from './lib/corridor.mjs';
+import {
+  UNITS,
+  altUnit as altUnitRaw,
+  inUnit as inUnitRaw,
+  fmtDist as fmtDistRaw,
+  createUnitToggle,
+} from './lib/units.mjs';
 import { initStrip } from './strip.js';
 
 const M_PER_MILE = 1609.344;
 const D2R = Math.PI / 180;
-
-const UNITS = {
-  mi: { perM: 1 / M_PER_MILE, label: 'mi' },
-  km: { perM: 1 / 1000, label: 'km' },
-};
 
 // [min, max, step, defaultValue] in each unit. The form rebuilds these when the
 // user toggles units so the slider always operates in the displayed unit.
@@ -232,12 +234,19 @@ function measureAcross(a, b) {
   return { river, straight, legs, path };
 }
 
-function activeUnit() { return els.unitsKm?.checked ? 'km' : 'mi'; }
-function altUnit()    { return activeUnit() === 'mi' ? 'km' : 'mi'; }
-function inUnit(m, u = activeUnit()) { return m * UNITS[u].perM; }
-function fmtDist(m, dec = 2, u = activeUnit()) {
-  return inUnit(m, u).toFixed(dec) + ' ' + UNITS[u].label;
-}
+const unitToggle = createUnitToggle({
+  checkbox: els.unitsKm,
+  storageKey: 'thameswise.unitsKm',
+  onChange: () => {
+    applySliderRanges(true);
+    updateFindLabels();
+    refresh();
+  },
+});
+function activeUnit() { return unitToggle.activeUnit(); }
+function altUnit()    { return altUnitRaw(activeUnit()); }
+function inUnit(m, u = activeUnit()) { return inUnitRaw(m, u); }
+function fmtDist(m, dec = 2, u = activeUnit()) { return fmtDistRaw(m, dec, u); }
 
 // A launch counts as a "put-in" if at least one parking lot is nearby
 // (parking proximity is our road-access proxy until we ingest road data).
@@ -538,13 +547,6 @@ for (const btn of els.findOxfordSide.querySelectorAll('.seg-btn')) {
   });
 }
 
-els.unitsKm.addEventListener('change', () => {
-  try { localStorage.setItem('thameswise.unitsKm', els.unitsKm.checked ? '1' : '0'); } catch {}
-  applySliderRanges(true);
-  updateFindLabels();
-  refresh();
-});
-
 els.btnFind.addEventListener('click', runFinder);
 
 function runFinder() {
@@ -796,10 +798,8 @@ function drawFindOverlay(items) {
 
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1).replace('_', '-'); }
 
-// Restore unit preference, then size sliders to that unit's defaults.
-try {
-  els.unitsKm.checked = localStorage.getItem('thameswise.unitsKm') === '1';
-} catch {}
+// Size the finder sliders to the current unit's defaults. The checkbox has
+// already been restored from localStorage by createUnitToggle.
 applySliderRanges(false);
 updateFindLabels();
 
