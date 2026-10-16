@@ -147,16 +147,18 @@ el('btn-clear').addEventListener('click', () => {
 });
 
 const panel = el('panel');
-function setCollapsed(collapsed) {
-  panel.classList.toggle('collapsed', collapsed);
-  panel.classList.toggle('expanded', !collapsed);
-  el('panel-toggle').setAttribute('aria-label', collapsed ? 'Expand panel' : 'Collapse panel');
+function syncPanelChrome() {
+  const collapsed = panel.classList.contains('collapsed');
+  const t = el('panel-toggle');
+  t.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+  t.setAttribute('aria-label', collapsed ? 'Expand panel' : 'Collapse panel');
   syncDistanceChip();
 }
 el('panel-toggle').addEventListener('click', () => {
-  setCollapsed(!panel.classList.contains('collapsed'));
+  panel.classList.toggle('collapsed');
+  syncPanelChrome();
 });
-enablePanelSwipe(panel, panel.querySelector('.panel-body'), { onChange: syncDistanceChip });
+enablePanelSwipe(panel, panel.querySelector('.panel-body'), { onChange: syncPanelChrome });
 
 // Distance chip — only visible when panel collapsed on the Measure tab with
 // an active reading.
@@ -171,7 +173,10 @@ function syncDistanceChip() {
     el('chip-unit').textContent = el('dist-primary-unit').textContent;
   }
 }
-el('distance-chip').addEventListener('click', () => setCollapsed(false));
+el('distance-chip').addEventListener('click', () => {
+  panel.classList.remove('collapsed');
+  syncPanelChrome();
+});
 
 // Tabs
 for (const tab of document.querySelectorAll('.tab')) {

@@ -413,15 +413,20 @@ els.btnShare.addEventListener('click', async () => {
   const ok = await copyShareLink();
   toast(ok ? 'Link copied to clipboard' : location.href);
 });
-function setCollapsed(collapsed) {
-  els.panel.classList.toggle('collapsed', collapsed);
-  els.panel.classList.toggle('expanded', !collapsed);
+// Both the chevron tap and the swipe gesture route here so aria + chip
+// visibility match the actual panel state, no matter which path triggered
+// the collapse.
+function syncPanelChrome() {
+  const collapsed = els.panel.classList.contains('collapsed');
+  els.panelToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+  els.panelToggle.setAttribute('aria-label', collapsed ? 'Expand panel' : 'Collapse panel');
   syncDistanceChip();
 }
 els.panelToggle.addEventListener('click', () => {
-  setCollapsed(!els.panel.classList.contains('collapsed'));
+  els.panel.classList.toggle('collapsed');
+  syncPanelChrome();
 });
-enablePanelSwipe(els.panel, els.panel.querySelector('.panel-body'), { onChange: syncDistanceChip });
+enablePanelSwipe(els.panel, els.panel.querySelector('.panel-body'), { onChange: syncPanelChrome });
 
 // Distance chip: visible when the panel is collapsed on the Measure tab and
 // there's an active reading. Tapping it re-expands the panel. Element lookups
@@ -440,7 +445,10 @@ function syncDistanceChip() {
     document.getElementById('chip-unit').textContent = els.distPrimaryUnit.textContent;
   }
 }
-document.getElementById('distance-chip').addEventListener('click', () => setCollapsed(false));
+document.getElementById('distance-chip').addEventListener('click', () => {
+  els.panel.classList.remove('collapsed');
+  syncPanelChrome();
+});
 
 // Tab switching
 for (const tab of els.tabs) {

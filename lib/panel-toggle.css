@@ -1,9 +1,15 @@
 /* Shared chevron used by both apps to collapse the bottom panel. Sits in a
    dedicated column at the left of the tabs row — sharing vertical space with
-   the tabs rather than adding a strip above them. The .tabs margin-left here
-   is what reserves that column. */
+   the tabs rather than adding a strip above them. The #panel .tabs margin-left
+   here is what reserves that column. */
 
-.tabs { margin-left: 44px; }
+/* Height of the panel strip left visible when collapsed. Read by
+   lib/panel-swipe.mjs for the drag preview, referenced by the collapsed-state
+   translateY in app.css / path.html inline, and used by the distance chip to
+   position itself just above. Change here only. */
+:root { --panel-peek: 68px; }
+
+#panel .tabs { margin-left: 44px; }
 
 .panel-toggle {
   position: absolute;

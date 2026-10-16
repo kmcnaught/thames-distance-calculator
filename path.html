@@ -27,8 +27,7 @@
       transition: transform 220ms ease;
       padding-bottom: env(safe-area-inset-bottom, 0);
     }
-    /* Peek matches COLLAPSED_PEEK_PX in lib/panel-swipe.mjs. */
-    #panel.collapsed { transform: translateY(calc(100% - 68px)); }
+    #panel.collapsed { transform: translateY(calc(100% - var(--panel-peek))); }
     .panel-body { padding: 12px 16px 14px; overflow-y: auto; flex: 1 1 auto; min-height: 0; }
     #hint { margin: 0; font-size: 14px; color: #555; }
     #readout .big {
@@ -71,8 +70,8 @@
     <span class="brand-switch">also: <a href="./index.html">Thameswise (river)</a></span>
   </header>
 
-  <section id="panel" class="expanded">
-    <button id="panel-toggle" class="panel-toggle" aria-label="Collapse panel">
+  <section id="panel">
+    <button id="panel-toggle" class="panel-toggle" aria-label="Collapse panel" aria-expanded="true">
       <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
         <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
@@ -86,7 +85,7 @@
 
     <section id="tab-measure" class="tab-panel active" role="tabpanel">
       <p id="hint">Click the map to drop pin <span class="pin-chip pin-a">A</span>.</p>
-      <div id="readout" hidden>
+      <div id="readout" aria-live="polite" hidden>
         <div>
           <span id="dist-primary" class="big">—</span>
           <span id="dist-primary-unit" class="unit">mi on the trail</span>

@@ -23,8 +23,8 @@
     <span class="brand-switch">also: <a href="./path.html">Thames Path</a></span>
   </header>
 
-  <section id="panel" class="expanded" aria-live="polite">
-    <button id="panel-toggle" class="panel-toggle" aria-label="Collapse panel">
+  <section id="panel">
+    <button id="panel-toggle" class="panel-toggle" aria-label="Collapse panel" aria-expanded="true">
       <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
         <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
@@ -40,7 +40,7 @@
       <section id="tab-measure" class="tab-panel active" role="tabpanel">
         <p id="hint" class="hint">Click the river to drop pin A.</p>
 
-        <div id="readout" class="readout" hidden>
+        <div id="readout" class="readout" aria-live="polite" hidden>
           <div class="distance">
             <span id="dist-primary" class="dist-km">—</span>
             <span id="dist-primary-unit" class="dist-unit">mi on the river</span>
