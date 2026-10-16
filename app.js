@@ -421,7 +421,7 @@ function setCollapsed(collapsed) {
 els.panelToggle.addEventListener('click', () => {
   setCollapsed(!els.panel.classList.contains('collapsed'));
 });
-enablePanelSwipe(els.panel, els.panel.querySelector('.panel-body'));
+enablePanelSwipe(els.panel, els.panel.querySelector('.panel-body'), { onChange: syncDistanceChip });
 
 // Distance chip: visible when the panel is collapsed on the Measure tab and
 // there's an active reading. Tapping it re-expands the panel. Element lookups
