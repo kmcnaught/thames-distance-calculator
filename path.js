@@ -31,7 +31,7 @@ async function tryLoadLayer(url, build, legend, name) {
       if (!r.ok) throw new Error(`${name} fetch: ${r.status}`);
       return r.json();
     });
-    const raw = d.accommodation ?? d.stations ?? [];
+    const raw = d.accommodation ?? d.stations ?? d.food ?? [];
     const items = overlays.nearPath(raw);
     const group = build(items);
     layerControl.addOverlay(group, overlays.labelWithLegend(name, legend));
@@ -43,6 +43,7 @@ async function tryLoadLayer(url, build, legend, name) {
 
 await tryLoadLayer('./data/accommodation.json', overlays.accommodationLayer, overlays.accommodationLegendHtml(), 'Accommodation');
 await tryLoadLayer('./data/stations.json',      overlays.stationsLayer,      overlays.stationsLegendHtml(),      'Train stations');
+await tryLoadLayer('./data/food.json',          overlays.foodLayer,          overlays.foodLegendHtml(),          'Pubs & cafés');
 
 let busLayer = null;
 try {

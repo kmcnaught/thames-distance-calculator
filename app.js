@@ -988,7 +988,7 @@ async function tryLoadSharedOverlay(url, build, legendHtml, name) {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const d = await res.json();
-    const raw = d.accommodation ?? d.stations ?? [];
+    const raw = d.accommodation ?? d.stations ?? d.food ?? [];
     const items = overlays.nearRiver(raw);
     const group = build(items);
     layerControl.addOverlay(group, overlays.labelWithLegend(name, legendHtml));
@@ -1237,6 +1237,7 @@ function buildPutIns() {
   await Promise.all([
     tryLoadSharedOverlay('./data/accommodation.json', overlays.accommodationLayer, overlays.accommodationLegendHtml(), 'Accommodation'),
     tryLoadSharedOverlay('./data/stations.json',      overlays.stationsLayer,      overlays.stationsLegendHtml(),      'Train stations'),
+    tryLoadSharedOverlay('./data/food.json',          overlays.foodLayer,          overlays.foodLegendHtml(),          'Pubs & cafés'),
   ]);
 
   try {
