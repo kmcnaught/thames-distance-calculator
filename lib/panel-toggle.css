@@ -1,0 +1,22 @@
+/* Shared chevron-button used by both apps to collapse their bottom panel.
+   Each app positions the button and defines the #panel.collapsed transform
+   that matches its own panel layout. */
+
+.panel-toggle {
+  position: absolute;
+  background: none;
+  border: 0;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: #475569;
+  border-radius: 8px;
+  z-index: 1;
+}
+.panel-toggle:hover { background: rgba(15, 23, 42, 0.06); }
+.panel-toggle:focus-visible {
+  outline: 2px solid var(--brand-accent, #0b3a5c);
+  outline-offset: 2px;
+}
+.panel-toggle svg { transition: transform 220ms ease; }
+#panel.collapsed .panel-toggle svg { transform: rotate(180deg); }

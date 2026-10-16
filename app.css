@@ -43,6 +43,11 @@ body {
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   transition: transform 220ms ease, max-height 220ms ease;
+  display: flex;
+  flex-direction: column;
+  /* Keep the brand card uncovered and let .panel-body scroll internally when
+     Strip / Find-trips content overflows a short viewport. */
+  max-height: calc(100dvh - 72px);
 }
 
 @media (min-width: 720px) {
@@ -67,24 +72,13 @@ body {
     padding-bottom: env(safe-area-inset-bottom, 0);
   }
   #panel.collapsed { transform: translateY(calc(100% - 64px)); }
-  .panel-toggle { top: 8px; right: 14px; }
+  /* Top-left — on narrow screens the panel can extend high enough to collide
+     with the Leaflet layer-control stack at top-right. */
+  .panel-toggle { top: 8px; left: 14px; }
+  .panel-body { padding-left: 54px; }
 }
 
-.panel-toggle {
-  position: absolute;
-  background: none;
-  border: 0;
-  width: 32px; height: 32px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  color: var(--ink-soft);
-  border-radius: 8px;
-}
-.panel-toggle:hover { background: rgba(15, 23, 42, 0.06); }
-#panel.collapsed .panel-toggle svg { transform: rotate(180deg); }
-.panel-toggle svg { transition: transform 220ms ease; }
-
-.panel-body { padding: 12px 18px 8px; }
+.panel-body { padding: 12px 18px 8px; overflow-y: auto; flex: 1 1 auto; min-height: 0; }
 @media (min-width: 720px) { .panel-body { padding: 12px 20px 4px; } }
 
 .tabs {
@@ -361,6 +355,7 @@ input[type="range"]:focus-visible,
   font-size: 11px;
   color: var(--ink-faint);
   border-top: 1px solid #f1f5f9;
+  flex-shrink: 0;
 }
 .attr a { color: inherit; }
 

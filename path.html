@@ -10,16 +10,25 @@
   <link rel="stylesheet" href="./lib/overlays.css" />
   <link rel="stylesheet" href="./lib/strip.css" />
   <link rel="stylesheet" href="./lib/brand.css" />
+  <link rel="stylesheet" href="./lib/panel-toggle.css" />
   <style>
     :root { --brand-accent: #2d5016; }
     html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
     #map { position: absolute; inset: 0; }
     #panel {
-      position: absolute; bottom: 12px; left: 12px; right: 12px; z-index: 500;
+      position: fixed; bottom: 12px; left: 12px; right: 12px; z-index: 500;
       max-width: 420px; margin: 0 auto;
-      background: #fff; border-radius: 10px; padding: 14px 16px;
+      max-height: calc(100dvh - 80px);
+      display: flex; flex-direction: column;
+      background: #fff; border-radius: 10px;
       box-shadow: 0 4px 16px rgba(0,0,0,.15);
+      transition: transform 220ms ease;
     }
+    #panel.collapsed { transform: translateY(calc(100% - 44px)); }
+    /* Top-left — Leaflet layer-control at top-right can reach down into the
+       panel's top-right corner on short viewports. */
+    .panel-toggle { top: 6px; left: 6px; }
+    .panel-body { padding: 14px 16px 14px 46px; overflow-y: auto; flex: 1 1 auto; min-height: 0; }
     #hint { margin: 0; font-size: 14px; color: #555; }
     #readout .big {
       font-size: 32px; font-weight: 600; color: #2d5016; line-height: 1.1;
@@ -61,7 +70,14 @@
     <span class="brand-switch">also: <a href="./index.html">Thameswise (river)</a></span>
   </header>
 
-  <section id="panel">
+  <section id="panel" class="expanded">
+    <button id="panel-toggle" class="panel-toggle" aria-label="Collapse panel">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+        <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <div class="panel-body">
     <nav class="tabs" role="tablist">
       <button class="tab active" data-tab="measure" role="tab" aria-selected="true">Measure</button>
       <button class="tab" data-tab="strip" role="tab" aria-selected="false">Strip</button>
@@ -105,6 +121,7 @@
 
     <div class="attr">
       Trail from OSM relation 14519665 (© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors, ODbL).
+    </div>
     </div>
   </section>
 

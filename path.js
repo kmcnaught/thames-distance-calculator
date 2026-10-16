@@ -12,7 +12,8 @@ import { mergeWaymarks } from './lib/waymarks.mjs';
 import { initStrip } from './strip.js';
 
 const el = (id) => document.getElementById(id);
-const map = L.map('map', { zoomControl: true });
+const map = L.map('map', { zoomControl: false });
+L.control.zoom({ position: 'topright' }).addTo(map);
 
 const layerControl = L.control.layers(null, null, { position: 'topright', collapsed: true }).addTo(map);
 overlays.tameLayerControl(layerControl);
@@ -139,6 +140,13 @@ el('btn-swap').addEventListener('click', () => corridor.swap());
 el('btn-clear').addEventListener('click', () => {
   corridor.clearAll();
   clearStripFocus();
+});
+
+const panel = el('panel');
+el('panel-toggle').addEventListener('click', () => {
+  panel.classList.toggle('collapsed');
+  const collapsed = panel.classList.contains('collapsed');
+  el('panel-toggle').setAttribute('aria-label', collapsed ? 'Expand panel' : 'Collapse panel');
 });
 
 // Tabs
