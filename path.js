@@ -6,7 +6,9 @@
 import { snap, haversine } from './lib/geo.mjs';
 import * as overlays from './lib/overlays.mjs';
 import { createCorridor } from './lib/corridor.mjs';
-import { UNITS, inUnit, fmtDist, altUnit, createUnitToggle } from './lib/units.mjs';
+import { UNITS, M_PER_MILE, inUnit, fmtDist, altUnit, createUnitToggle } from './lib/units.mjs';
+import { mergeWaymarks } from './lib/waymarks.mjs';
+import { initStrip } from './strip.js';
 
 const el = (id) => document.getElementById(id);
 const map = L.map('map', { zoomControl: true });
@@ -125,7 +127,63 @@ function refresh() {
 }
 
 el('btn-swap').addEventListener('click', () => corridor.swap());
-el('btn-clear').addEventListener('click', () => corridor.clearAll());
+el('btn-clear').addEventListener('click', () => {
+  corridor.clearAll();
+  clearStripFocus();
+});
+
+// Tabs
+for (const tab of document.querySelectorAll('.tab')) {
+  tab.addEventListener('click', () => {
+    const which = tab.dataset.tab;
+    for (const t of document.querySelectorAll('.tab')) {
+      const active = t.dataset.tab === which;
+      t.classList.toggle('active', active);
+      t.setAttribute('aria-selected', active ? 'true' : 'false');
+    }
+    for (const key of ['measure', 'strip']) {
+      el(`tab-${key}`).hidden = key !== which;
+    }
+  });
+}
+
+// Strip view — curated waypoints with path_mi join against transport by name.
+let stripFocus = null;
+function clearStripFocus() {
+  if (stripFocus) { map.removeLayer(stripFocus); stripFocus = null; }
+}
+try {
+  const [curatedRes, transportRes] = await Promise.all([
+    fetch('./data/curated-waypoints.json'),
+    fetch('./data/curated-transport.json'),
+  ]);
+  if (curatedRes.ok) {
+    const curated = await curatedRes.json();
+    const transport = transportRes.ok ? await transportRes.json() : { transport: [] };
+    // Defensive: skip waymarks the curated pipeline couldn't anchor to the
+    // trail. Currently a no-op (all 70 curated entries have path_mi) but
+    // guards against future entries missing a trail position.
+    const waymarks = mergeWaymarks({ curated, transport })
+      .filter((w) => w.path_mi != null);
+    const totalM = cum[cum.length - 1];
+    initStrip({
+      container: el('tab-strip'),
+      waymarks,
+      totalM,
+      distanceM: (w) => w.path_mi * M_PER_MILE,
+      corridorNoun: 'trail',
+      onFocus: (latlng) => {
+        map.panTo(latlng, { animate: true });
+        clearStripFocus();
+        stripFocus = L.circleMarker(latlng, {
+          radius: 7, color: '#2d5016', fillColor: '#facc15', fillOpacity: 0.9, weight: 2,
+        }).addTo(map);
+      },
+    });
+  }
+} catch (err) {
+  console.warn('[path] strip view unavailable:', err.message);
+}
 
 // Hydrate from ?a=&b= if present.
 const restored = corridor.restoreFromUrl();

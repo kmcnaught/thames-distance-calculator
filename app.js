@@ -1129,12 +1129,11 @@ function buildPutIns() {
   if (curated && launchesRes && launchesRes.ok) {
     const transport = transportRes && transportRes.ok ? await transportRes.json() : { transport: [] };
     const waymarks = mergeWaymarks({ curated, transport, launches: state.launches });
-    const totalRiverM = state.thames.cum[state.thames.cum.length - 1];
     initStrip({
       container: els.tabPanels.strip,
       waymarks,
-      totalRiverM,
-      onFocusRiver: (latlng) => {
+      totalM: state.thames.cum[state.thames.cum.length - 1],
+      onFocus: (latlng) => {
         // Pan the map and drop a transient marker at the tapped waymark.
         map.panTo(latlng, { animate: true });
         clearStripFocus();

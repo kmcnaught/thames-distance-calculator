@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <link rel="stylesheet" href="./lib/overlays.css" />
+  <link rel="stylesheet" href="./lib/strip.css" />
   <style>
     html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
     #map { position: absolute; inset: 0; }
@@ -44,6 +45,15 @@
     .pin-b { background: #0891b2; }
     .attr { margin-top: 10px; font-size: 11px; color: #888; }
     .attr a { color: #888; }
+    .tabs { display: flex; gap: 4px; margin-bottom: 12px; background: #f1f5f9;
+      padding: 4px; border-radius: 8px; }
+    .tab { flex: 1; border: 0; background: transparent; font: inherit;
+      font-size: 13px; font-weight: 500; color: #475569; padding: 6px 10px;
+      border-radius: 6px; cursor: pointer; }
+    .tab.active { background: white; color: #2d5016;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06); }
+    .tab-panel[hidden] { display: none; }
+    .strip-tab-hint { margin: 8px 0 0; font-size: 12px; color: #666; }
   </style>
 </head>
 <body>
@@ -51,22 +61,47 @@
   <div id="brand"><strong>Thames Path</strong> — click two spots, see distance along the trail</div>
 
   <section id="panel">
-    <p id="hint">Click the map to drop pin <span class="pin-chip pin-a">A</span>.</p>
-    <div id="readout" hidden>
-      <div>
-        <span id="dist-primary" class="big">—</span>
-        <span id="dist-primary-unit" class="unit">mi on the trail</span>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="measure" role="tab" aria-selected="true">Measure</button>
+      <button class="tab" data-tab="strip" role="tab" aria-selected="false">Strip</button>
+    </nav>
+
+    <section id="tab-measure" class="tab-panel active" role="tabpanel">
+      <p id="hint">Click the map to drop pin <span class="pin-chip pin-a">A</span>.</p>
+      <div id="readout" hidden>
+        <div>
+          <span id="dist-primary" class="big">—</span>
+          <span id="dist-primary-unit" class="unit">mi on the trail</span>
+        </div>
+        <div class="secondary">
+          <span id="dist-secondary">—</span> · <span id="dist-straight">—</span>
+        </div>
+        <p id="warn" class="warn" hidden></p>
       </div>
-      <div class="secondary">
-        <span id="dist-secondary">—</span> · <span id="dist-straight">—</span>
+      <div class="actions">
+        <button id="btn-swap" disabled>Swap A ↔ B</button>
+        <button id="btn-clear" disabled>Clear</button>
       </div>
-      <p id="warn" class="warn" hidden></p>
-    </div>
-    <div class="actions">
-      <button id="btn-swap" disabled>Swap A ↔ B</button>
-      <button id="btn-clear" disabled>Clear</button>
-    </div>
-    <label class="check"><input id="units-km" type="checkbox" /> Show distances in km (default: miles)</label>
+      <label class="check"><input id="units-km" type="checkbox" /> Show distances in km (default: miles)</label>
+    </section>
+
+    <section id="tab-strip" class="tab-panel" role="tabpanel" hidden>
+      <div class="strip-controls">
+        <label for="strip-scale">
+          Scale <output id="strip-scale-out">10 mi in view</output>
+        </label>
+        <input id="strip-scale" type="range" min="5" max="20" step="1" value="10" />
+      </div>
+      <div id="strip-viewport" class="strip-viewport" aria-label="Thames Path waymark strip">
+        <div id="strip-axis" class="strip-axis"></div>
+        <div id="strip-waymarks" class="strip-waymarks"></div>
+        <div id="strip-cursor" class="strip-cursor" role="slider" aria-label="Position on trail" aria-orientation="vertical" aria-valuemin="0" tabindex="0">
+          <span class="strip-cursor-label">—</span>
+        </div>
+      </div>
+      <p class="strip-tab-hint">Drag the strip to pan. Drag the blue line to move the cursor. Tap a waymark to view on the map.</p>
+    </section>
+
     <div class="attr">
       Trail from OSM relation 14519665 (© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors, ODbL).
     </div>

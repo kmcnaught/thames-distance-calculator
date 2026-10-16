@@ -1,4 +1,6 @@
-// Strip view — vertical 1D projection of the river with sensible waymarks.
+// Strip view — vertical 1D projection of a corridor with sensible waymarks.
+// Used by both the river app (waymarks anchored by along_m) and the path
+// app (anchored by path_mi), via the distanceM accessor option.
 //
 // Owns just the DOM inside #tab-strip. Everything else — the map, the data
 // fetch, unit toggle — is passed in via the init options so this module can be
@@ -21,8 +23,10 @@ const TRANSPORT_GLYPH = { rail: '🚂', bus: '🚌', tube: 'Ⓤ', ferry: '⛴' }
 export function initStrip({
   container,      // the tab panel root
   waymarks,       // array from mergeWaymarks()
-  totalRiverM,    // full length of the river in metres (from thames.json)
-  onFocusRiver,   // (latlng) => void — called when a waymark is tapped
+  totalM,         // full length of the corridor in metres
+  distanceM = (w) => w.along_m,  // which field anchors a waymark to the strip
+  corridorNoun = 'river',        // used in ARIA text ("position on river/trail")
+  onFocus,        // (latlng) => void — called when a waymark is tapped
 }) {
   const viewport = container.querySelector('#strip-viewport');
   const waymarkLayer = container.querySelector('#strip-waymarks');
@@ -31,17 +35,17 @@ export function initStrip({
   const scaleEl = container.querySelector('#strip-scale');
   const scaleOut = container.querySelector('#strip-scale-out');
 
-  // Viewport state (in metres along the river).
+  // Viewport state (in metres along the corridor).
   const state = {
     scaleMi: parseFloat(scaleEl.value),
-    // Centre of the viewport, in metres. Seeded at mid-river.
-    centreM: totalRiverM / 2,
-    cursorM: totalRiverM / 2,
+    // Centre of the viewport, in metres. Seeded at mid-corridor.
+    centreM: totalM / 2,
+    cursorM: totalM / 2,
   };
 
   function rangeM() { return state.scaleMi * M_PER_MILE; }
   function startM() { return Math.max(0, state.centreM - rangeM() / 2); }
-  function endM()   { return Math.min(totalRiverM, state.centreM + rangeM() / 2); }
+  function endM()   { return Math.min(totalM, state.centreM + rangeM() / 2); }
 
   function viewportHeight() { return viewport.clientHeight; }
   function pxPerM() { return viewportHeight() / rangeM(); }
@@ -59,7 +63,7 @@ export function initStrip({
     // Wipe old ticks; keep the axis pseudo-elements alone by removing tick divs only.
     for (const t of viewport.querySelectorAll('.strip-tick, .strip-tick-label')) t.remove();
     // Ticks are anchored to the cursor and labelled as signed offsets from it.
-    // "72.6 mi from the arbitrary OSM Thames start" means nothing to a river
+    // "72.6 mi from the arbitrary OSM Thames start" means nothing to a
     // user — "+5 mi downstream / −3 mi upstream from you" does.
     const c = state.cursorM;
     const s = startM(), e = endM();
@@ -68,7 +72,7 @@ export function initStrip({
     const endOffset = Math.floor((e - c) / M_PER_MILE);
     for (let off = startOffset; off <= endOffset; off++) {
       const alongM = c + off * M_PER_MILE;
-      if (alongM < 0 || alongM > totalRiverM) continue;
+      if (alongM < 0 || alongM > totalM) continue;
       const y = alongMToY(alongM);
       const tick = document.createElement('div');
       tick.className = 'strip-tick';
@@ -86,7 +90,7 @@ export function initStrip({
 
   function selectVisibleWaymarks() {
     const s = startM(), e = endM();
-    const visible = waymarks.filter((w) => w.along_m >= s && w.along_m <= e);
+    const visible = waymarks.filter((w) => distanceM(w) >= s && distanceM(w) <= e);
     // Two-pass min-gap selection: locks always in, then majors, then minors.
     // Gap thresholds in pixels; convert to metres via current pxPerM.
     const majorGapPx = 26;
@@ -95,12 +99,12 @@ export function initStrip({
     const kept = [];
     function farEnough(w, gapPx) {
       const gapM = gapPx / p;
-      return kept.every((k) => Math.abs(k.along_m - w.along_m) >= gapM);
+      return kept.every((k) => Math.abs(distanceM(k) - distanceM(w)) >= gapM);
     }
     for (const w of visible) if (w.kind === 'lock') kept.push(w);
     for (const w of visible) if (w.kind !== 'lock' && w.tier === 'major' && farEnough(w, majorGapPx)) kept.push(w);
     for (const w of visible) if (w.kind !== 'lock' && w.tier === 'minor' && farEnough(w, minorGapPx)) kept.push(w);
-    kept.sort((a, b) => a.along_m - b.along_m);
+    kept.sort((a, b) => distanceM(a) - distanceM(b));
     return kept;
   }
 
@@ -126,7 +130,7 @@ export function initStrip({
     for (const w of list) {
       const el = document.createElement('div');
       el.className = `strip-waymark ${w.tier}`;
-      el.style.top = alongMToY(w.along_m) + 'px';
+      el.style.top = alongMToY(distanceM(w)) + 'px';
       el.dataset.id = w.id;
       const bank = w.side && (w.side === 'L' || w.side === 'R')
         ? `<span class="badge bank-${w.side}" title="${w.side === 'L' ? 'Left bank' : 'Right bank'} looking downstream">${w.side}</span>`
@@ -138,10 +142,10 @@ export function initStrip({
         (badges ? `<span class="badge">${badges}</span>` : '') +
         bank;
       el.addEventListener('click', () => {
-        state.cursorM = clamp(w.along_m, 0, totalRiverM);
+        state.cursorM = clamp(distanceM(w), 0, totalM);
         renderTicks();
         renderCursor();
-        if (onFocusRiver) onFocusRiver([w.lat, w.lng]);
+        if (onFocus) onFocus([w.lat, w.lng]);
       });
       waymarkLayer.appendChild(el);
     }
@@ -153,19 +157,19 @@ export function initStrip({
     const mi = (state.cursorM / M_PER_MILE).toFixed(1);
     cursorLabel.textContent = `${mi} mi`;
     cursorEl.setAttribute('aria-valuenow', mi);
-    cursorEl.setAttribute('aria-valuetext', `${mi} miles along river`);
+    cursorEl.setAttribute('aria-valuetext', `${mi} miles along ${corridorNoun}`);
   }
 
   // Pan the viewport if the cursor would otherwise sit outside (or flush
   // against) the visible range — keeps the focus ring on screen when the
-  // keyboard moves the cursor past the current window. Short-river case:
-  // when the whole river fits in view the centre is fixed, so skip the pan.
+  // keyboard moves the cursor past the current window. Short-corridor case:
+  // when the whole corridor fits in view the centre is fixed, so skip the pan.
   function ensureCursorVisible() {
-    if (totalRiverM <= rangeM()) return;
+    if (totalM <= rangeM()) return;
     const pad = rangeM() * 0.1;
     const halfR = rangeM() / 2;
     const minCentre = halfR;
-    const maxCentre = totalRiverM - halfR;
+    const maxCentre = totalM - halfR;
     if (state.cursorM < startM() + pad) {
       state.centreM = clamp(state.cursorM + halfR - pad, minCentre, maxCentre);
     } else if (state.cursorM > endM() - pad) {
@@ -189,10 +193,10 @@ export function initStrip({
   });
   viewport.addEventListener('pointermove', (e) => {
     if (!panning) return;
-    if (totalRiverM <= rangeM()) return;  // whole river fits — nothing to pan
+    if (totalM <= rangeM()) return;  // whole corridor fits — nothing to pan
     const dy = e.clientY - panning.startY;
     const dm = -dy / pxPerM();  // dragging down pans upstream (view shows lower along_m)
-    state.centreM = clamp(panning.startCentre + dm, rangeM() / 2, totalRiverM - rangeM() / 2);
+    state.centreM = clamp(panning.startCentre + dm, rangeM() / 2, totalM - rangeM() / 2);
     render();
   });
   viewport.addEventListener('pointerup', () => { panning = null; });
@@ -209,7 +213,7 @@ export function initStrip({
     if (!cursorDrag) return;
     const rect = viewport.getBoundingClientRect();
     const y = e.clientY - rect.top;
-    state.cursorM = clamp(yToAlongM(y), 0, totalRiverM);
+    state.cursorM = clamp(yToAlongM(y), 0, totalM);
     // Re-render ticks — their labels are cursor-relative, so they must shift
     // when the cursor moves. Waymarks are position-only, no need to re-render.
     renderTicks();
@@ -219,11 +223,11 @@ export function initStrip({
   cursorEl.addEventListener('pointercancel', () => { cursorDrag = false; });
 
   // Keyboard support for the slider. Arrow keys step ~0.1 mi (small nudge
-  // ≈ 160 m), Page keys step 1 mi, Home/End jump to the river ends. Vertical
-  // orientation: Down = downstream (increasing along_m).
+  // ≈ 160 m), Page keys step 1 mi, Home/End jump to the ends. Vertical
+  // orientation: Down = downstream (increasing distance from source).
   const STEP_SMALL_M = 0.1 * M_PER_MILE;
   const STEP_LARGE_M = M_PER_MILE;
-  cursorEl.setAttribute('aria-valuemax', (totalRiverM / M_PER_MILE).toFixed(1));
+  cursorEl.setAttribute('aria-valuemax', (totalM / M_PER_MILE).toFixed(1));
   cursorEl.addEventListener('keydown', (e) => {
     let next = state.cursorM;
     switch (e.key) {
@@ -234,11 +238,11 @@ export function initStrip({
       case 'PageDown':   next += STEP_LARGE_M; break;
       case 'PageUp':     next -= STEP_LARGE_M; break;
       case 'Home':       next = 0; break;
-      case 'End':        next = totalRiverM; break;
+      case 'End':        next = totalM; break;
       default: return;
     }
     e.preventDefault();
-    state.cursorM = clamp(next, 0, totalRiverM);
+    state.cursorM = clamp(next, 0, totalM);
     ensureCursorVisible();
     render();
   });
