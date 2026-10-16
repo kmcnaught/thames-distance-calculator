@@ -1,8 +1,11 @@
 // Minimal Thames Path distance app: click two spots, see along-trail distance.
-// Reuses lib/geo.mjs for snap + measure; data is data/thames-path.json.
+// Pin interaction (place, drag, swap, URL round-trip, tap-near-trail gate)
+// lives in lib/corridor.mjs; this file handles data loading, overlays, and
+// the readout.
 
 import { snap, haversine } from './lib/geo.mjs';
 import * as overlays from './lib/overlays.mjs';
+import { createCorridor } from './lib/corridor.mjs';
 
 const M_PER_MILE = 1609.344;
 
@@ -58,36 +61,19 @@ try {
   console.warn('[path] bus-routes layer unavailable:', err.message);
 }
 
-const pinStyle = (letter, color) => L.divIcon({
-  className: 'tp-pin',
-  html: `<div style="background:${color};color:#fff;width:26px;height:26px;border-radius:50%;` +
-        `display:flex;align-items:center;justify-content:center;font-weight:700;` +
-        `box-shadow:0 2px 6px rgba(0,0,0,.3);border:2px solid #fff;">${letter}</div>`,
-  iconSize: [26, 26], iconAnchor: [13, 13],
+const corridor = createCorridor({
+  map,
+  snap: (target) => snap(coords, cum, target),
+  colors: { A: '#e11d48', B: '#0891b2' },
+  tapSnapPx: 40,
+  onChange: refresh,
 });
 
-const pins = { A: null, B: null };     // {marker, snap}
-let next = 'A';
-
-function placePin(letter, latlng) {
-  const target = [latlng.lat, latlng.lng];
-  const s = snap(coords, cum, target);
-  const color = letter === 'A' ? '#e11d48' : '#0891b2';
-  if (pins[letter]) pins[letter].marker.remove();
-  const marker = L.marker(latlng, { icon: pinStyle(letter, color), draggable: true });
-  marker.addTo(map);
-  marker.on('drag', (ev) => {
-    const ll = ev.target.getLatLng();
-    pins[letter].snap = snap(coords, cum, [ll.lat, ll.lng]);
-    refresh();
-  });
-  pins[letter] = { marker, snap: s };
-  next = letter === 'A' ? 'B' : 'A';
-  refresh();
-}
+// Clear any pinned bus route whenever the user interacts with the map.
+map.on('click', () => busLayer?.clearPinned());
 
 function refresh() {
-  const { A, B } = pins;
+  const { A, B } = corridor.getPins();
   if (!A && !B) {
     el('readout').hidden = true;
     el('hint').innerHTML = 'Click the map to drop pin <span class="pin-chip pin-a">A</span>.';
@@ -114,8 +100,6 @@ function refresh() {
   el('straight').textContent = `${(straightM / 1000).toFixed(2)} km straight`;
   el('readout').hidden = false;
 
-  // Snap-offset warning: if the user clicked far from the trail, the along
-  // distance may not reflect their real intent.
   const maxOff = Math.max(A.snap.off, B.snap.off);
   if (maxOff > 200) {
     el('warn').hidden = false;
@@ -125,7 +109,6 @@ function refresh() {
     el('warn').hidden = true;
   }
 
-  // Highlight the trail stretch between A and B.
   const [lo, hi] = A.snap.along < B.snap.along ? [A.snap, B.snap] : [B.snap, A.snap];
   const stretch = [lo.latlng.slice()];
   for (let k = lo.i + 1; k <= hi.i; k++) stretch.push(coords[k]);
@@ -133,36 +116,15 @@ function refresh() {
   highlight.setLatLngs(stretch);
 }
 
-map.on('click', (ev) => {
-  busLayer?.clearPinned();
-  // If both pins are placed, move whichever is nearer to the click.
-  if (pins.A && pins.B) {
-    const target = [ev.latlng.lat, ev.latlng.lng];
-    const dA = haversine(target, [pins.A.marker.getLatLng().lat, pins.A.marker.getLatLng().lng]);
-    const dB = haversine(target, [pins.B.marker.getLatLng().lat, pins.B.marker.getLatLng().lng]);
-    placePin(dA < dB ? 'A' : 'B', ev.latlng);
-  } else {
-    placePin(next, ev.latlng);
-  }
-});
+el('btn-swap').addEventListener('click', () => corridor.swap());
+el('btn-clear').addEventListener('click', () => corridor.clearAll());
 
-el('btn-swap').addEventListener('click', () => {
-  if (!pins.A || !pins.B) return;
-  const aLL = pins.A.marker.getLatLng();
-  const bLL = pins.B.marker.getLatLng();
-  pins.A.marker.remove();
-  pins.B.marker.remove();
-  pins.A = null; pins.B = null;
-  placePin('A', bLL);
-  placePin('B', aLL);
-});
-
-el('btn-clear').addEventListener('click', () => {
-  if (pins.A) pins.A.marker.remove();
-  if (pins.B) pins.B.marker.remove();
-  pins.A = null; pins.B = null;
-  next = 'A';
-  refresh();
-});
+// Hydrate from ?a=&b= if present.
+const restored = corridor.restoreFromUrl();
+if (restored.A && restored.B) {
+  map.fitBounds([restored.A, restored.B], { padding: [60, 60] });
+} else if (restored.A || restored.B) {
+  map.setView(restored.A || restored.B, 14);
+}
 
 refresh();

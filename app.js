@@ -5,6 +5,7 @@
 import { snap, haversine } from './lib/geo.mjs';
 import { mergeWaymarks } from './lib/waymarks.mjs';
 import * as overlays from './lib/overlays.mjs';
+import { createCorridor, pickSlot, copyShareLink } from './lib/corridor.mjs';
 import { initStrip } from './strip.js';
 
 const M_PER_MILE = 1609.344;
@@ -55,7 +56,6 @@ const els = {
   distStraight: document.getElementById('dist-straight'),
   sinuosity: document.getElementById('sinuosity'),
   warn: document.getElementById('offset-warn'),
-  nextSlot: document.getElementById('next-slot-label'),
   btnSwap: document.getElementById('btn-swap'),
   btnClear: document.getElementById('btn-clear'),
   btnShare: document.getElementById('btn-share'),
@@ -94,11 +94,7 @@ const state = {
   extras: null,           // { extras: [...], meta }  piers/quays/weirs/ferry
   sandfordM: null,        // along_m of Sandford-on-Thames Lock (= "Oxford")
   putIns: [],             // unified put-in list across sources, sorted by along_m
-  pins: { A: null, B: null }, // [lat, lng]
-  next: 'A',
   layers: {
-    markers: { A: null, B: null },
-    snapLines: { A: null, B: null },
     reach: null,
     centreline: null,
     tributaries: null,    // L.layerGroup of tributary polylines
@@ -373,115 +369,36 @@ function pinIcon(letter, color) {
   });
 }
 
-const PIN_COLOR = { A: '#0b3a5c', B: '#c45c3f' };
+// Flattens snapAny's `{ ww, snap }` into the single-level shape the corridor
+// module expects (`.latlng`, `.off` at the top level). `ww` rides along so
+// refresh() can read it off `getPins().A.snap.ww`.
+const snapForCorridor = (target) => {
+  if (!state.waterways.length) return null;
+  const r = snapAny(target);
+  return r ? { ...r.snap, ww: r.ww } : null;
+};
 
-// Only drop a pin when the tap is visually close to a waterway — otherwise a
-// stray tap on a far-away part of the map silently snaps a pin onto the river.
-const TAP_SNAP_PX = 40;
-map.on('click', (e) => {
-  state.busLayer?.clearPinned();
-  const target = [e.latlng.lat, e.latlng.lng];
-  if (!state.waterways.length) return;
-  const s = snapAny(target);
-  if (!s) return;
-  const snappedPt = map.latLngToContainerPoint(L.latLng(s.snap.latlng[0], s.snap.latlng[1]));
-  if (snappedPt.distanceTo(e.containerPoint) > TAP_SNAP_PX) return;
-  setPin(pickSlot(target), target);
+const corridor = createCorridor({
+  map,
+  snap: snapForCorridor,
+  colors: { A: '#0b3a5c', B: '#c45c3f' },
+  iconFactory: pinIcon,
+  tapSnapPx: 40,
+  showSnapLines: true,
+  onChange: refresh,
 });
 
-// Which slot a tap fills: an empty one first, otherwise whichever existing
-// pin is closer to the tap. Dragging or clicking a specific pin remains the
-// way to override.
-function pickSlot(target) {
-  const { A, B } = state.pins;
-  if (A == null) return 'A';
-  if (B == null) return 'B';
-  return haversine(target, A) <= haversine(target, B) ? 'A' : 'B';
-}
-
-function setPin(slot, latlng) {
-  state.pins[slot] = latlng;
-  drawPin(slot);
-  // state.next drives the next-pin chip and the single-empty-slot case.
-  // Once both pins exist, pickSlot() takes over and nearest-to-tap wins.
-  if (state.pins.A == null) state.next = 'A';
-  else if (state.pins.B == null) state.next = 'B';
-  syncNextSlotUI();
-  refresh();
-}
-
-function syncNextSlotUI() {
-  els.nextSlot.textContent = state.next;
-  els.nextSlot.classList.toggle('pin-a', state.next === 'A');
-  els.nextSlot.classList.toggle('pin-b', state.next === 'B');
-}
-
-function drawPin(slot) {
-  const layers = state.layers.markers;
-  const latlng = state.pins[slot];
-  if (layers[slot]) {
-    layers[slot].setLatLng(latlng);
-  } else {
-    layers[slot] = L.marker(latlng, {
-      icon: pinIcon(slot, PIN_COLOR[slot]),
-      draggable: true,
-      autoPan: true,
-    }).addTo(map);
-    layers[slot].on('drag', () => {
-      state.pins[slot] = [layers[slot].getLatLng().lat, layers[slot].getLatLng().lng];
-      refresh();
-    });
-    // Single-clicking a pin makes it the next-to-move target. Lets the user
-    // iterate on a chosen anchor without having to drag.
-    layers[slot].on('click', (ev) => {
-      L.DomEvent.stopPropagation(ev);
-      state.next = slot;
-      syncNextSlotUI();
-    });
-  }
-}
-
-function clearPin(slot) {
-  state.pins[slot] = null;
-  if (state.layers.markers[slot]) {
-    map.removeLayer(state.layers.markers[slot]);
-    state.layers.markers[slot] = null;
-  }
-  if (state.layers.snapLines[slot]) {
-    map.removeLayer(state.layers.snapLines[slot]);
-    state.layers.snapLines[slot] = null;
-  }
-}
+// Clear any pinned bus route on map click (including taps gated out by the
+// corridor's tap-near-river check).
+map.on('click', () => state.busLayer?.clearPinned());
 
 function refresh() {
-  const { A, B } = state.pins;
-  const hasA = !!A, hasB = !!B;
+  const { A: pinA, B: pinB } = corridor.getPins();
+  const hasA = !!pinA, hasB = !!pinB;
   els.btnClear.disabled = !hasA && !hasB;
   els.btnSwap.disabled = !(hasA && hasB);
   els.btnShare.disabled = !(hasA && hasB);
 
-  // Snap each pin to whichever waterway is nearest; may be Thames or any tributary.
-  const snapA = hasA && state.waterways.length ? snapAny(A) : null;
-  const snapB = hasB && state.waterways.length ? snapAny(B) : null;
-
-  // Snap lines
-  for (const slot of ['A', 'B']) {
-    if (state.layers.snapLines[slot]) {
-      map.removeLayer(state.layers.snapLines[slot]);
-      state.layers.snapLines[slot] = null;
-    }
-    const s = slot === 'A' ? snapA : snapB;
-    if (s) {
-      state.layers.snapLines[slot] = L.polyline([state.pins[slot], s.snap.latlng], {
-        color: PIN_COLOR[slot],
-        weight: 1.5,
-        opacity: 0.55,
-        dashArray: '3 5',
-      }).addTo(map);
-    }
-  }
-
-  // Reach
   if (state.layers.reach) { map.removeLayer(state.layers.reach); state.layers.reach = null; }
 
   if (!hasA && !hasB) {
@@ -499,10 +416,12 @@ function refresh() {
   } else {
     els.hint.hidden = true;
     els.readout.hidden = false;
-    const result = measureAcross(snapA, snapB);
+    const sideA = { ww: pinA.snap.ww, snap: pinA.snap };
+    const sideB = { ww: pinB.snap.ww, snap: pinB.snap };
+    const result = measureAcross(sideA, sideB);
     const u = activeUnit(), au = altUnit();
-    const sameWw = snapA.ww === snapB.ww;
-    const ww = snapA.ww;
+    const sameWw = sideA.ww === sideB.ww;
+    const ww = sideA.ww;
     els.distPrimary.textContent = inUnit(result.river, u).toFixed(2);
     if (sameWw) {
       els.distPrimaryUnit.textContent = UNITS[u].label + (ww.kind === 'thames' ? ' on the river' : ` on the ${ww.short_name}`);
@@ -517,8 +436,8 @@ function refresh() {
     const sinuosity = result.straight > 0 ? result.river / result.straight : 1;
     els.sinuosity.textContent = 'sinuosity ' + sinuosity.toFixed(2);
     const warnings = [];
-    if (snapA.snap.off > 500) warnings.push(`A is ${fmtDist(snapA.snap.off, 2)} from the ${snapA.ww.short_name}`);
-    if (snapB.snap.off > 500) warnings.push(`B is ${fmtDist(snapB.snap.off, 2)} from the ${snapB.ww.short_name}`);
+    if (sideA.snap.off > 500) warnings.push(`A is ${fmtDist(sideA.snap.off, 2)} from the ${sideA.ww.short_name}`);
+    if (sideB.snap.off > 500) warnings.push(`B is ${fmtDist(sideB.snap.off, 2)} from the ${sideB.ww.short_name}`);
     if (warnings.length) {
       els.warn.hidden = false;
       els.warn.textContent = warnings.join(' · ');
@@ -533,71 +452,22 @@ function refresh() {
       lineJoin: 'round',
     }).addTo(map);
   }
-
-  updateUrl();
-}
-
-function updateUrl() {
-  const params = new URLSearchParams();
-  const fmt = ([lat, lng]) => `${lat.toFixed(5)},${lng.toFixed(5)}`;
-  if (state.pins.A) params.set('a', fmt(state.pins.A));
-  if (state.pins.B) params.set('b', fmt(state.pins.B));
-  const qs = params.toString();
-  const url = qs ? `${location.pathname}?${qs}` : location.pathname;
-  history.replaceState(null, '', url);
-}
-
-function parseUrl() {
-  const params = new URLSearchParams(location.search);
-  const parse = (s) => {
-    if (!s) return null;
-    const [lat, lng] = s.split(',').map(Number);
-    return Number.isFinite(lat) && Number.isFinite(lng) ? [lat, lng] : null;
-  };
-  const A = parse(params.get('a'));
-  const B = parse(params.get('b'));
-  if (A) setPin('A', A);
-  if (B) setPin('B', B);
-  if (A && B) {
-    map.fitBounds([A, B], { padding: [60, 60] });
-  } else if (A || B) {
-    map.setView(A || B, 14);
-  }
 }
 
 // Buttons
-els.btnSwap.addEventListener('click', () => {
-  const a = state.pins.A, b = state.pins.B;
-  clearPin('A'); clearPin('B');
-  if (b) setPin('A', b);
-  if (a) setPin('B', a);
-});
+els.btnSwap.addEventListener('click', () => corridor.swap());
 els.btnClear.addEventListener('click', () => {
-  clearPin('A'); clearPin('B');
+  corridor.clearAll();
   clearFindOverlay();
   clearStripFocus();
-  state.next = 'A';
-  els.nextSlot.textContent = 'A';
-  els.nextSlot.classList.add('pin-a');
-  els.nextSlot.classList.remove('pin-b');
-  refresh();
 });
 els.btnShare.addEventListener('click', async () => {
-  try {
-    await navigator.clipboard.writeText(location.href);
-    toast('Link copied to clipboard');
-  } catch {
-    toast(location.href);
-  }
+  const ok = await copyShareLink();
+  toast(ok ? 'Link copied to clipboard' : location.href);
 });
 els.panelToggle.addEventListener('click', () => {
   els.panel.classList.toggle('collapsed');
   els.panel.classList.toggle('expanded');
-});
-
-els.nextSlot.addEventListener('click', () => {
-  state.next = state.next === 'A' ? 'B' : 'A';
-  syncNextSlotUI();
 });
 
 // Tab switching
@@ -801,9 +671,9 @@ function renderFinderResults(results) {
     li.tabIndex = 0;
     li.setAttribute('role', 'button');
     const activate = () => {
-      clearPin('A'); clearPin('B');
-      setPin('A', [A.snap_lat, A.snap_lng]);
-      setPin('B', [B.snap_lat, B.snap_lng]);
+      corridor.clearAll();
+      corridor.setPin('A', [A.snap_lat, A.snap_lng]);
+      corridor.setPin('B', [B.snap_lat, B.snap_lng]);
       map.fitBounds([[A.snap_lat, A.snap_lng], [B.snap_lat, B.snap_lng]], { padding: [40, 40] });
       // Switch back to Measure tab so user sees the readout
       document.querySelector('.tab[data-tab="measure"]').click();
@@ -970,7 +840,8 @@ function renderLaunches() {
     });
     marker.on('click', (ev) => {
       L.DomEvent.stopPropagation(ev);
-      setPin(state.next, [l.snap_lat, l.snap_lng]);
+      const target = [l.snap_lat, l.snap_lng];
+      corridor.setPin(pickSlot(corridor.getPins(), target), target);
     });
     group.addLayer(marker);
   });
@@ -1018,7 +889,8 @@ function renderBridges() {
     });
     marker.on('click', (ev) => {
       L.DomEvent.stopPropagation(ev);
-      setPin(state.next, [b.snap_lat, b.snap_lng]);
+      const target = [b.snap_lat, b.snap_lng];
+      corridor.setPin(pickSlot(corridor.getPins(), target), target);
     });
     group.addLayer(marker);
   }
@@ -1067,7 +939,8 @@ function renderExtras() {
       // Weirs are hazards; we still allow clicking to set a pin since the user
       // may be using one as a measure reference, but the trip finder won't use
       // them (role !== put_in).
-      setPin(state.next, [e.snap_lat, e.snap_lng]);
+      const target = [e.snap_lat, e.snap_lng];
+      corridor.setPin(pickSlot(corridor.getPins(), target), target);
     });
     group.addLayer(marker);
   }
@@ -1272,5 +1145,10 @@ function buildPutIns() {
     });
   }
 
-  parseUrl();
+  const restored = corridor.restoreFromUrl();
+  if (restored.A && restored.B) {
+    map.fitBounds([restored.A, restored.B], { padding: [60, 60] });
+  } else if (restored.A || restored.B) {
+    map.setView(restored.A || restored.B, 14);
+  }
 })();
