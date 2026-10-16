@@ -5,7 +5,7 @@
 
 .distance-chip {
   position: fixed;
-  bottom: calc(80px + env(safe-area-inset-bottom, 0px) + 12px);
+  bottom: calc(68px + env(safe-area-inset-bottom, 0px) + 12px);
   right: 12px;
   z-index: 650;
   padding: 8px 14px;

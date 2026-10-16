@@ -28,8 +28,8 @@
       padding-bottom: env(safe-area-inset-bottom, 0);
     }
     /* Peek matches COLLAPSED_PEEK_PX in lib/panel-swipe.mjs. */
-    #panel.collapsed { transform: translateY(calc(100% - 80px)); }
-    .panel-body { padding: 34px 16px 14px; overflow-y: auto; flex: 1 1 auto; min-height: 0; }
+    #panel.collapsed { transform: translateY(calc(100% - 68px)); }
+    .panel-body { padding: 12px 16px 14px; overflow-y: auto; flex: 1 1 auto; min-height: 0; }
     #hint { margin: 0; font-size: 14px; color: #555; }
     #readout .big {
       font-size: 32px; font-weight: 600; color: #2d5016; line-height: 1.1;
@@ -55,7 +55,7 @@
       padding: 4px; border-radius: 8px; }
     .tab { flex: 1; border: 0; background: transparent; font: inherit;
       font-size: 13px; font-weight: 500; color: #475569; padding: 6px 10px;
-      border-radius: 6px; cursor: pointer; }
+      border-radius: 6px; cursor: pointer; min-height: 36px; }
     .tab.active { background: white; color: #2d5016;
       box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06); }
     .tab-panel[hidden] { display: none; }

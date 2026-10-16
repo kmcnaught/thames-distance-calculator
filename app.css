@@ -73,10 +73,10 @@ body {
 
 /* Collapsed peek matches COLLAPSED_PEEK_PX in lib/panel-swipe.mjs — change
    both together. */
-#panel.collapsed { transform: translateY(calc(100% - 80px)); }
+#panel.collapsed { transform: translateY(calc(100% - 68px)); }
 
-.panel-body { padding: 34px 18px 8px; overflow-y: auto; flex: 1 1 auto; min-height: 0; }
-@media (min-width: 720px) { .panel-body { padding: 34px 20px 4px; } }
+.panel-body { padding: 12px 18px 8px; overflow-y: auto; flex: 1 1 auto; min-height: 0; }
+@media (min-width: 720px) { .panel-body { padding: 12px 20px 4px; } }
 
 .tabs {
   display: flex;
