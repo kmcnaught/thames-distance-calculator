@@ -11,24 +11,25 @@
   <link rel="stylesheet" href="./lib/strip.css" />
   <link rel="stylesheet" href="./lib/brand.css" />
   <link rel="stylesheet" href="./lib/panel-toggle.css" />
+  <link rel="stylesheet" href="./lib/distance-chip.css" />
   <style>
     :root { --brand-accent: #2d5016; }
     html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
     #map { position: absolute; inset: 0; }
     #panel {
-      position: fixed; bottom: 12px; left: 12px; right: 12px; z-index: 500;
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
       max-width: 420px; margin: 0 auto;
       max-height: calc(100dvh - 80px);
       display: flex; flex-direction: column;
-      background: #fff; border-radius: 10px;
+      background: #fff;
+      border-top-left-radius: 16px; border-top-right-radius: 16px;
       box-shadow: 0 4px 16px rgba(0,0,0,.15);
       transition: transform 220ms ease;
+      padding-bottom: env(safe-area-inset-bottom, 0);
     }
-    #panel.collapsed { transform: translateY(calc(100% - 44px)); }
-    /* Top-left — Leaflet layer-control at top-right can reach down into the
-       panel's top-right corner on short viewports. */
-    .panel-toggle { top: 6px; left: 6px; }
-    .panel-body { padding: 14px 16px 14px 46px; overflow-y: auto; flex: 1 1 auto; min-height: 0; }
+    /* Peek matches COLLAPSED_PEEK_PX in lib/panel-swipe.mjs. */
+    #panel.collapsed { transform: translateY(calc(100% - 80px)); }
+    .panel-body { padding: 34px 16px 14px; overflow-y: auto; flex: 1 1 auto; min-height: 0; }
     #hint { margin: 0; font-size: 14px; color: #555; }
     #readout .big {
       font-size: 32px; font-weight: 600; color: #2d5016; line-height: 1.1;
@@ -124,6 +125,11 @@
     </div>
     </div>
   </section>
+
+  <button id="distance-chip" class="distance-chip" aria-label="Expand measurement panel" hidden>
+    <span id="chip-value" class="chip-value">—</span>
+    <span id="chip-unit" class="chip-unit">—</span>
+  </button>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>

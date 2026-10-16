@@ -14,6 +14,7 @@ import {
   createUnitToggle,
 } from './lib/units.mjs';
 import { installSharedBasemaps } from './lib/base-layers.mjs';
+import { enablePanelSwipe } from './lib/panel-swipe.mjs';
 import { initStrip } from './strip.js';
 
 const M_PER_MILE = 1609.344;
@@ -398,6 +399,7 @@ function refresh() {
       map.hasLayer(baseSatellite) ? REACH_SATELLITE : REACH_STREETS,
     ).addTo(map);
   }
+  syncDistanceChip();
 }
 
 // Buttons
@@ -411,10 +413,34 @@ els.btnShare.addEventListener('click', async () => {
   const ok = await copyShareLink();
   toast(ok ? 'Link copied to clipboard' : location.href);
 });
+function setCollapsed(collapsed) {
+  els.panel.classList.toggle('collapsed', collapsed);
+  els.panel.classList.toggle('expanded', !collapsed);
+  syncDistanceChip();
+}
 els.panelToggle.addEventListener('click', () => {
-  els.panel.classList.toggle('collapsed');
-  els.panel.classList.toggle('expanded');
+  setCollapsed(!els.panel.classList.contains('collapsed'));
 });
+enablePanelSwipe(els.panel, els.panel.querySelector('.panel-body'));
+
+// Distance chip: visible when the panel is collapsed on the Measure tab and
+// there's an active reading. Tapping it re-expands the panel. Element lookups
+// happen on each call because refresh() can fire during module init (URL-
+// restored pins), before any module-scoped bindings here would be reachable.
+function syncDistanceChip() {
+  const chip = document.getElementById('distance-chip');
+  if (!chip) return;
+  const collapsed = els.panel.classList.contains('collapsed');
+  const onMeasure = !els.tabPanels.measure.hidden;
+  const hasReading = !els.readout.hidden;
+  const show = collapsed && onMeasure && hasReading;
+  chip.hidden = !show;
+  if (show) {
+    document.getElementById('chip-value').textContent = els.distPrimary.textContent;
+    document.getElementById('chip-unit').textContent = els.distPrimaryUnit.textContent;
+  }
+}
+document.getElementById('distance-chip').addEventListener('click', () => setCollapsed(false));
 
 // Tab switching
 for (const tab of els.tabs) {
@@ -426,6 +452,7 @@ for (const tab of els.tabs) {
       t.setAttribute('aria-selected', active ? 'true' : 'false');
     }
     for (const [k, panel] of Object.entries(els.tabPanels)) panel.hidden = k !== which;
+    syncDistanceChip();
   });
 }
 

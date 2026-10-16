@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="./lib/strip.css" />
   <link rel="stylesheet" href="./lib/brand.css" />
   <link rel="stylesheet" href="./lib/panel-toggle.css" />
+  <link rel="stylesheet" href="./lib/distance-chip.css" />
   <link rel="stylesheet" href="./app.css" />
 </head>
 <body>
@@ -136,6 +137,11 @@
       © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL)
     </footer>
   </section>
+
+  <button id="distance-chip" class="distance-chip" aria-label="Expand measurement panel" hidden>
+    <span id="chip-value" class="chip-value">—</span>
+    <span id="chip-unit" class="chip-unit">—</span>
+  </button>
 
   <div id="toast" class="toast" hidden></div>
 

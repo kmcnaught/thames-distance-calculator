@@ -1,0 +1,38 @@
+/* Floating distance chip shown when the panel is collapsed on the Measure
+   tab with a reading. Lives above the collapsed-panel peek strip at the
+   bottom-right of the map so the user can still see their measurement at a
+   glance. Clicking it re-expands the panel. */
+
+.distance-chip {
+  position: fixed;
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px) + 12px);
+  right: 12px;
+  z-index: 650;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.97);
+  border: 0;
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  font: inherit;
+  font-size: 12px;
+  color: #475569;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  max-width: calc(100vw - 24px);
+}
+.distance-chip[hidden] { display: none; }
+.distance-chip .chip-value {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--brand-accent, #0b3a5c);
+  font-variant-numeric: tabular-nums;
+}
+.distance-chip:hover { background: #fff; }
+.distance-chip:focus-visible {
+  outline: 2px solid var(--brand-accent, #0b3a5c);
+  outline-offset: 2px;
+}

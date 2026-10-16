@@ -1,16 +1,23 @@
-/* Shared chevron-button used by both apps to collapse their bottom panel.
-   Each app positions the button and defines the #panel.collapsed transform
-   that matches its own panel layout. */
+/* Shared chevron used by both apps to collapse the bottom panel. Centred at
+   the top of the panel so it has its own strip, clear of the tabs and the
+   top-right Leaflet controls. Collapsed state is driven per-app because the
+   panel layouts differ. */
 
 .panel-toggle {
   position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 28px;
   background: none;
   border: 0;
-  width: 32px; height: 32px;
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   color: #475569;
-  border-radius: 8px;
+  border-radius: 10px;
   z-index: 1;
 }
 .panel-toggle:hover { background: rgba(15, 23, 42, 0.06); }

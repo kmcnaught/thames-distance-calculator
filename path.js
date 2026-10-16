@@ -8,6 +8,7 @@ import * as overlays from './lib/overlays.mjs';
 import { createCorridor } from './lib/corridor.mjs';
 import { UNITS, M_PER_MILE, inUnit, fmtDist, altUnit, createUnitToggle } from './lib/units.mjs';
 import { installSharedBasemaps } from './lib/base-layers.mjs';
+import { enablePanelSwipe } from './lib/panel-swipe.mjs';
 import { mergeWaymarks } from './lib/waymarks.mjs';
 import { initStrip } from './strip.js';
 
@@ -90,6 +91,9 @@ const unitToggle = createUnitToggle({
 map.on('click', () => busLayer?.clearPinned());
 
 function refresh() {
+  try { refreshInner(); } finally { syncDistanceChip?.(); }
+}
+function refreshInner() {
   const { A, B } = corridor.getPins();
   if (!A && !B) {
     el('readout').hidden = true;
@@ -143,11 +147,31 @@ el('btn-clear').addEventListener('click', () => {
 });
 
 const panel = el('panel');
-el('panel-toggle').addEventListener('click', () => {
-  panel.classList.toggle('collapsed');
-  const collapsed = panel.classList.contains('collapsed');
+function setCollapsed(collapsed) {
+  panel.classList.toggle('collapsed', collapsed);
+  panel.classList.toggle('expanded', !collapsed);
   el('panel-toggle').setAttribute('aria-label', collapsed ? 'Expand panel' : 'Collapse panel');
+  syncDistanceChip();
+}
+el('panel-toggle').addEventListener('click', () => {
+  setCollapsed(!panel.classList.contains('collapsed'));
 });
+enablePanelSwipe(panel, panel.querySelector('.panel-body'));
+
+// Distance chip — only visible when panel collapsed on the Measure tab with
+// an active reading.
+function syncDistanceChip() {
+  const collapsed = panel.classList.contains('collapsed');
+  const onMeasure = !el('tab-measure').hidden;
+  const hasReading = !el('readout').hidden;
+  const show = collapsed && onMeasure && hasReading;
+  el('distance-chip').hidden = !show;
+  if (show) {
+    el('chip-value').textContent = el('dist-primary').textContent;
+    el('chip-unit').textContent = el('dist-primary-unit').textContent;
+  }
+}
+el('distance-chip').addEventListener('click', () => setCollapsed(false));
 
 // Tabs
 for (const tab of document.querySelectorAll('.tab')) {
@@ -161,6 +185,7 @@ for (const tab of document.querySelectorAll('.tab')) {
     for (const key of ['measure', 'strip']) {
       el(`tab-${key}`).hidden = key !== which;
     }
+    syncDistanceChip();
   });
 }
 
