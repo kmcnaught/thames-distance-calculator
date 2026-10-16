@@ -9,15 +9,11 @@
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <link rel="stylesheet" href="./lib/overlays.css" />
   <link rel="stylesheet" href="./lib/strip.css" />
+  <link rel="stylesheet" href="./lib/brand.css" />
   <style>
+    :root { --brand-accent: #2d5016; }
     html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
     #map { position: absolute; inset: 0; }
-    #brand {
-      position: absolute; top: 12px; left: 12px; z-index: 500;
-      background: #fff; padding: 8px 12px; border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.15); font-size: 14px;
-    }
-    #brand strong { color: #2d5016; }
     #panel {
       position: absolute; bottom: 12px; left: 12px; right: 12px; z-index: 500;
       max-width: 420px; margin: 0 auto;
@@ -58,7 +54,12 @@
 </head>
 <body>
   <div id="map"></div>
-  <div id="brand"><strong>Thames Path</strong> — click two spots, see distance along the trail</div>
+
+  <header id="brand" aria-hidden="false">
+    <span class="brand-mark">Thames Path</span>
+    <span class="brand-sub">on-trail distance · Thames</span>
+    <span class="brand-switch">also: <a href="./index.html">Thameswise (river)</a></span>
+  </header>
 
   <section id="panel">
     <nav class="tabs" role="tablist">

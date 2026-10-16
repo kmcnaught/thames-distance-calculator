@@ -1,0 +1,47 @@
+/* Shared title overlay for Thameswise (river) and Thames Path. Each page sets
+   --brand-accent for the title + switch link colour. */
+
+#brand {
+  position: fixed;
+  top: env(safe-area-inset-top, 12px);
+  left: 12px;
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 10px;
+  box-shadow: 0 6px 32px rgba(15, 23, 42, 0.18);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Container ignores clicks so the map stays draggable through the gap below
+     the text; the switch link opts back in. */
+  pointer-events: none;
+}
+.brand-mark {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-size: 18px;
+  color: var(--brand-accent, #0b3a5c);
+}
+.brand-sub {
+  font-size: 11px;
+  color: #475569;
+}
+.brand-switch {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #94a3b8;
+  pointer-events: auto;
+}
+.brand-switch a {
+  color: var(--brand-accent, #0b3a5c);
+  text-decoration: none;
+  border-bottom: 1px dotted currentColor;
+}
+.brand-switch a:hover,
+.brand-switch a:focus-visible { border-bottom-style: solid; }
+
+@media (max-width: 719px) {
+  #brand { left: 8px; top: env(safe-area-inset-top, 8px); }
+}
