@@ -13,6 +13,7 @@ import {
   fmtDist as fmtDistRaw,
   createUnitToggle,
 } from './lib/units.mjs';
+import { installSharedBasemaps } from './lib/base-layers.mjs';
 import { initStrip } from './strip.js';
 
 const M_PER_MILE = 1609.344;
@@ -48,6 +49,14 @@ const EXTRA_STYLE = {
 // already represented. Raw data in extras.json is untouched; tweak this constant
 // to tighten/loosen the filter.
 const EXTRA_SUPPRESS_RADIUS_M = 0.25 * M_PER_MILE;
+
+// Reach polyline (the drawn stretch between pins A and B). Navy reads well
+// against pale Streets tiles; on Satellite imagery navy would disappear
+// into the dark water + terrain, so switch to warm yellow — the same
+// "measurement is here" accent used by the strip-focus marker and the
+// walker's highlight.
+const REACH_STREETS   = { color: '#0b3a5c', weight: 5, opacity: 0.78, lineCap: 'round', lineJoin: 'round' };
+const REACH_SATELLITE = { color: '#facc15', weight: 5, opacity: 0.9,  lineCap: 'round', lineJoin: 'round' };
 
 const els = {
   hint: document.getElementById('hint'),
@@ -266,81 +275,12 @@ const map = L.map('map', {
 
 L.control.zoom({ position: 'topright' }).addTo(map);
 
-const baseStreets = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  attribution: '',
-});
-// Separate pane so Esri place-name tiles render above satellite imagery
-// (z-index 400) but below markers/popups (600+).
-map.createPane('labelsPane');
-map.getPane('labelsPane').style.zIndex = 450;
-map.getPane('labelsPane').style.pointerEvents = 'none';
-
-const baseSatellite = L.tileLayer(
-  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-  { maxZoom: 19, attribution: 'Imagery © Esri' }
-);
-const offRiverLabels = L.tileLayer(
-  'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-  { maxZoom: 19, pane: 'labelsPane' }
-);
-const onRiverLabels = L.layerGroup();
-
-baseStreets.addTo(map);
-const layerControl = L.control.layers(
-  { 'Streets': baseStreets, 'Satellite': baseSatellite },
-  {
-    'Place names (off-river)': offRiverLabels,
-    'River labels (locks, towns)': onRiverLabels,
-  },
-  { position: 'topright', collapsed: true }
-).addTo(map);
+const layerControl = L.control.layers(null, null, { position: 'topright', collapsed: true }).addTo(map);
 overlays.tameLayerControl(layerControl);
+const { baseSatellite } = installSharedBasemaps(map, layerControl);
 
-// OSM street tiles have labels baked in, so Esri place labels would double
-// up on Streets. On Streets we force the layer off AND disable the checkbox
-// so it reads as "not applicable here" rather than "turned off, go toggle".
-// On Satellite we restore whatever preference the user last expressed.
-let satOffRiverPref = true;
-let syncingOffRiver = false;
-function syncOffRiverToBase() {
-  const satellite = map.hasLayer(baseSatellite);
-  const shouldShow = satellite && satOffRiverPref;
-  syncingOffRiver = true;
-  if (shouldShow && !map.hasLayer(offRiverLabels)) offRiverLabels.addTo(map);
-  else if (!shouldShow && map.hasLayer(offRiverLabels)) map.removeLayer(offRiverLabels);
-  syncingOffRiver = false;
-  // Mirror checkbox state (Leaflet only repaints on its own click handler),
-  // and disable it on Streets to make the "not available here" visible.
-  // offRiverLabels is the first overlay registered — the control preserves
-  // registration order.
-  const input = layerControl.getContainer()
-    .querySelector('.leaflet-control-layers-overlays input[type="checkbox"]');
-  if (input) {
-    input.checked = shouldShow;
-    input.disabled = !satellite;
-  }
-}
-map.on('baselayerchange', syncOffRiverToBase);
-map.on('overlayadd overlayremove', (e) => {
-  // Only treat user-driven overlay toggles as a preference change — otherwise
-  // the base-switch auto-hide would wipe the user's choice on every bounce.
-  if (!syncingOffRiver && e.layer === offRiverLabels) {
-    satOffRiverPref = (e.type === 'overlayadd');
-  }
-});
-
-// Auto-fall-back on tile error (handoff §6).
-baseStreets.on('tileerror', () => {
-  if (map.hasLayer(baseStreets)) {
-    map.removeLayer(baseStreets);
-    baseSatellite.addTo(map);
-    syncOffRiverToBase();
-  }
-});
-
-// Reflect initial base-map state (no baselayerchange event fires on first paint).
-syncOffRiverToBase();
+const onRiverLabels = L.layerGroup();
+layerControl.addOverlay(onRiverLabels, 'River labels (locks, towns)');
 
 // Populate onRiverLabels with town/landmark/lock markers. Called from boot
 // so the layer piggybacks on the fetches that renderLaunches already needs.
@@ -453,13 +393,10 @@ function refresh() {
     } else {
       els.warn.hidden = true;
     }
-    state.layers.reach = L.polyline(result.path, {
-      color: '#0b3a5c',
-      weight: 5,
-      opacity: 0.78,
-      lineCap: 'round',
-      lineJoin: 'round',
-    }).addTo(map);
+    state.layers.reach = L.polyline(
+      result.path,
+      map.hasLayer(baseSatellite) ? REACH_SATELLITE : REACH_STREETS,
+    ).addTo(map);
   }
 }
 
@@ -1023,22 +960,22 @@ function buildPutIns() {
     cum: state.thames.cum,
     length_m: state.thames.cum[state.thames.cum.length - 1],
   });
-  // Render the centreline so the user sees the navigable channel. Colour
-  // depends on base tiles: dark navy against the pale Streets tiles, lighter
-  // blue against Satellite imagery so it stays visible against dark terrain.
-  state.layers.centreline = L.polyline(state.thames.coords, {
-    color: '#0b3a5c',
-    weight: 3.6,
-    opacity: 0.55,
-  }).addTo(map);
+  // Render the centreline so the user sees the navigable channel. On Streets
+  // a mid blue reads as "the river" against pale OSM tiles while leaving
+  // headroom for the navy reach to pop. On Satellite a lighter sky blue
+  // stays visible against dark terrain + water.
+  const CENTRELINE_STREETS   = { color: '#2563eb', weight: 3.6, opacity: 0.6 };
+  const CENTRELINE_SATELLITE = { color: '#7dd3fc', weight: 3.6, opacity: 0.9 };
+  state.layers.centreline = L.polyline(state.thames.coords, CENTRELINE_STREETS).addTo(map);
   map.fitBounds(state.layers.centreline.getBounds(), { padding: [40, 40] });
-  const retintCentreline = () => {
+  const retintForBase = () => {
     const satellite = map.hasLayer(baseSatellite);
-    state.layers.centreline.setStyle(satellite
-      ? { color: '#7dd3fc', opacity: 0.9 }
-      : { color: '#0b3a5c', opacity: 0.55 });
+    state.layers.centreline.setStyle(satellite ? CENTRELINE_SATELLITE : CENTRELINE_STREETS);
+    if (state.layers.reach) {
+      state.layers.reach.setStyle(satellite ? REACH_SATELLITE : REACH_STREETS);
+    }
   };
-  map.on('baselayerchange', retintCentreline);
+  map.on('baselayerchange', retintForBase);
 
   // Tributaries: thinner, lighter blue; canals get a dashed stroke to read
   // differently from natural rivers. Pins can snap to any of these.

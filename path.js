@@ -7,27 +7,36 @@ import { snap, haversine } from './lib/geo.mjs';
 import * as overlays from './lib/overlays.mjs';
 import { createCorridor } from './lib/corridor.mjs';
 import { UNITS, M_PER_MILE, inUnit, fmtDist, altUnit, createUnitToggle } from './lib/units.mjs';
+import { installSharedBasemaps } from './lib/base-layers.mjs';
 import { mergeWaymarks } from './lib/waymarks.mjs';
 import { initStrip } from './strip.js';
 
 const el = (id) => document.getElementById(id);
 const map = L.map('map', { zoomControl: true });
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© OpenStreetMap contributors',
-  maxZoom: 19,
-}).addTo(map);
+const layerControl = L.control.layers(null, null, { position: 'topright', collapsed: true }).addTo(map);
+overlays.tameLayerControl(layerControl);
+const { baseSatellite } = installSharedBasemaps(map, layerControl);
 
 const data = await fetch('./data/thames-path.json').then((r) => r.json());
 const { coords, cum } = data;
 
-const line = L.polyline(coords, { color: '#2d5016', weight: 3, opacity: 0.85 }).addTo(map);
+// Dark forest green reads well on OSM Streets; a lighter sage lifts the trail
+// off satellite tree cover when the user switches base. The highlight shares
+// sage on Streets (base is dark, highlight pops) and switches to a warm
+// yellow on Satellite (where the base trail becomes sage itself).
+const TRAIL_STREETS = { color: '#2d5016', weight: 3, opacity: 0.85 };
+const TRAIL_SATELLITE = { color: '#9ac67a', weight: 3, opacity: 0.95 };
+const HIGHLIGHT_STREETS = { color: '#9ac67a', weight: 7, opacity: 0.65 };
+const HIGHLIGHT_SATELLITE = { color: '#facc15', weight: 7, opacity: 0.75 };
+const line = L.polyline(coords, TRAIL_STREETS).addTo(map);
+const highlight = L.polyline([], HIGHLIGHT_STREETS).addTo(map);
+map.on('baselayerchange', () => {
+  const sat = map.hasLayer(baseSatellite);
+  line.setStyle(sat ? TRAIL_SATELLITE : TRAIL_STREETS);
+  highlight.setStyle(sat ? HIGHLIGHT_SATELLITE : HIGHLIGHT_STREETS);
+});
 map.fitBounds(line.getBounds(), { padding: [40, 40] });
-
-const highlight = L.polyline([], { color: '#9ac67a', weight: 7, opacity: 0.65 }).addTo(map);
-
-const layerControl = L.control.layers(null, null, { position: 'topright', collapsed: true }).addTo(map);
-overlays.tameLayerControl(layerControl);
 
 async function tryLoadLayer(url, build, legend, name) {
   try {
