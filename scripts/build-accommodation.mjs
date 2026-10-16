@@ -5,10 +5,10 @@
 // (ODbL), within 1 mile (1609 m) of **either** the river or the Thames Path.
 //
 // One Overpass query, driven by the path's anchor list (the path largely
-// contains the non-tidal river geographically). Each kept entry is snapped
-// to both corridors; `along_river_m` is null when the entry is >1 mi from
-// the river, and likewise for `along_path_m`. Each app filters by its own
-// non-null field at render time.
+// contains the river geographically). Each kept entry is snapped to both
+// corridors; `along_river_m` is null when the entry is >1 mi from the river,
+// and likewise for `along_path_m`. Each app filters by its own non-null
+// field at render time.
 //
 // Band is a cheap OSM-tag proxy (hostel → cheap; B&B / 1–2★ hotel → medium;
 // 3–4★ or budget brand → medium_pricy; 5★ or luxury name → pricy). NO

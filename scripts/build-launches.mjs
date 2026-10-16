@@ -1,4 +1,4 @@
-// Build the launches layer for the non-tidal Thames.
+// Build the launches layer for the Thames (Lechlade → Tower Bridge).
 //
 // Sources (all OSM, ODbL):
 //   - Locks:    waterway=lock_gate   (EA's authoritative 45 along the river)
@@ -33,6 +33,21 @@ const TYPE_RANK = { lock: 3, slipway: 2, put_in: 1 };
 // Dedupe radii (m). Locks especially: gate nodes can sit 30–100 m from the
 // named lock-chamber way's centre, so the radius needs to be generous.
 const DEDUPE_RADIUS_M = { lock: 200, slipway: 60, put_in: 60 };
+
+// OSM tags `waterway=lock_gate` on marina/basin entrance gates in the tidal
+// reach — not Thames navigation locks and not useful as put-ins. Each entry
+// here is a (lat, lng, radius_m) zone; any `lock`-type candidate whose
+// coords fall inside gets dropped. (OSM maps each dock entrance as a named
+// `way` plus a few lock_gate `node`s a few metres away, so a radius-based
+// filter catches both.) Teddington's gates and Richmond Lock (the half-tide
+// barrage) are the only real locks in the tideway and are kept.
+const LOCK_REJECT_ZONES = [
+  { lat: 51.4654, lng: -0.3228, r_m: 100, why: 'River Crane Flood Gates — on the Crane tributary' },
+  { lat: 51.4826, lng: -0.3005, r_m: 250, why: 'Brentford Dock / Grand Union junction — marina entrance + GUC\'s Thames Lock, neither on the Thames proper' },
+  { lat: 51.4754, lng: -0.2712, r_m: 120, why: 'Chiswick Quay Lock — marina entrance' },
+  { lat: 51.4749, lng: -0.1805, r_m: 120, why: 'Chelsea Harbour Lock — marina entrance' },
+  { lat: 51.4862, lng: -0.1491, r_m: 120, why: 'unnamed Vauxhall-area dock-entrance gate' },
+];
 
 const thames = JSON.parse(readFileSync(THAMES_PATH, 'utf8'));
 
@@ -104,12 +119,25 @@ function latlngOf(el) {
   return null;
 }
 
+const rejectHits = new Map(LOCK_REJECT_ZONES.map((z) => [z, 0]));
+function inRejectZone(ll) {
+  for (const z of LOCK_REJECT_ZONES) {
+    if (haversine(ll, [z.lat, z.lng]) <= z.r_m) return z;
+  }
+  return null;
+}
+
 const candidates = [];
+let nRejected = 0;
 for (const el of elements) {
   const type = classify(el.tags);
   if (!type) continue;
   const ll = latlngOf(el);
   if (!ll) continue;
+  if (type === 'lock') {
+    const zone = inRejectZone(ll);
+    if (zone) { nRejected++; rejectHits.set(zone, rejectHits.get(zone) + 1); continue; }
+  }
   const s = snap(thames.coords, thames.cum, ll);
   if (s.off > MAX_SNAP_OFFSET_M) continue;
   candidates.push({
@@ -124,7 +152,10 @@ for (const el of elements) {
     osm_id: `${el.type}/${el.id}`,
   });
 }
-console.log(`[build-launches] ${candidates.length} candidates within ${MAX_SNAP_OFFSET_M} m of centreline`);
+console.log(`[build-launches] ${candidates.length} candidates within ${MAX_SNAP_OFFSET_M} m of centreline (rejected ${nRejected} lock-type features by reject-zone)`);
+for (const [zone, n] of rejectHits) {
+  if (n === 0) console.warn(`[build-launches] WARN: reject zone "${zone.why}" matched 0 features — OSM may have retagged; consider removing or widening`);
+}
 
 // Dedupe: cluster by snapped position. Radius depends on the larger of the
 // two entry types (locks get a generous 200 m because lock_gate nodes can

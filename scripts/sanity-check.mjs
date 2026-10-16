@@ -1,6 +1,8 @@
-// Sanity-check the measurement pipeline. Pairs are non-tidal Thames only
-// (Lechlade → Teddington); tidal points are explicitly out of scope and
-// will snap with a large offset (correct behaviour: surface as a warning).
+// Sanity-check the measurement pipeline. Landmark pairs along the Thames,
+// mostly non-tidal (Lechlade → Teddington) where CanalPlanAC's lock-to-lock
+// distances give us independent reference numbers; tidal pairs are harder to
+// cross-reference so they aren't included here, but measurement works down
+// to Tower Bridge now.
 //
 // Expected distances cross-referenced against CanalPlanAC / common
 // published Thames lock-to-lock tables. Tolerances are generous because

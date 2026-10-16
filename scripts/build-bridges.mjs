@@ -1,4 +1,5 @@
-// Build the bridges layer — road crossings of the non-tidal Thames.
+// Build the bridges layer — road crossings of the Thames (Lechlade → Tower
+// Bridge).
 //
 // Bridges are useful as informal put-ins: many have a small layby on the
 // abutment or a road-side pull-in. We include them in the trip-finder's

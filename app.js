@@ -1,4 +1,4 @@
-// Thameswise — non-tidal Thames on-river distance calculator.
+// Thameswise — on-river distance calculator for the Thames (Lechlade → Tower Bridge).
 // Map-first single-page app. Click two spots, see channel-following distance,
 // iterate. URL state (?a=lat,lng&b=lat,lng) is the share format.
 

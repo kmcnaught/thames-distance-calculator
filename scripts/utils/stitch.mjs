@@ -1,6 +1,6 @@
 // Stitch unordered OSM `way` segments into one ordered channel from the
-// westmost endpoint to the nearest endpoint to a target (used for clipping
-// to Teddington Lock = non-tidal terminus). Per THAMES_HANDOFF.md §5.
+// westmost endpoint to the nearest endpoint to a target latlng. Per
+// THAMES_HANDOFF.md §5.
 //
 // Input: array of Overpass ways with `geometry: [{lat, lon}, ...]`.
 // Output: { coords: [[lat,lng],...], meta: { source, sink, sinkOffsetM } }

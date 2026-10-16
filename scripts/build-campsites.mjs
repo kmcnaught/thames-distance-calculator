@@ -1,4 +1,6 @@
-// Build the campsites layer for the non-tidal Thames corridor.
+// Build the campsites layer for the Thames corridor (Lechlade → Tower
+// Bridge). Central London has no camp sites in practice, so the dataset is
+// densely tagged upstream and sparse-to-empty in the tidal reach.
 //
 // Source: OSM `tourism=camp_site` (ODbL). The only legally-clean Thames-wide
 // dataset; commercial aggregators (Hipcamp, Pitchup, Cool Camping) are

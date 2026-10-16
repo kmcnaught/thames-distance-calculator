@@ -6,7 +6,7 @@ Shared helpers for the Thameswise build pipeline. Per the global scripts policy:
 |---|---|
 | `geo.mjs` | Re-exports `lib/geo.mjs` — single source of truth for haversine, snap, measure, reachPts, buildCum, simplify. The browser app and the build scripts import the same code. |
 | `overpass.mjs` | POST to Overpass API with mirror fallback + timeout. `await overpass(query)` returns parsed JSON. |
-| `stitch.mjs` | Dijkstra-based stitching of unordered OSM `way` segments into a single ordered channel from the westmost endpoint to a target latlng (used to clip to Teddington Lock). Per THAMES_HANDOFF.md §5. |
+| `stitch.mjs` | Dijkstra-based stitching of unordered OSM `way` segments into a single ordered channel from the westmost endpoint to a target latlng (currently Tower Bridge for the Thames). Per THAMES_HANDOFF.md §5. |
 | `diag-stitch.mjs` | Diagnostic — prints the stitch-graph component sizes and bboxes for one named waterway. CLI: `node scripts/utils/diag-stitch.mjs "River Thame"`. Use when a build-tributaries run yields a suspiciously short polyline. |
 | `lookup-curated-coords.mjs` | One-shot resolver for `data/curated-waypoints.json`. Populates each entry with `lat`, `lng`, `along_m`, `offset_m`, `side` by joining locks against `launches.json`, bridges against `bridges.json`, settlements via a cached Overpass `place=*` query, and stragglers via a hand-coded `LANDMARK_COORDS` map inside the script. Dry-run by default; `--write` mutates the JSON. Overpass response is cached to `.overpass-cache-settlements.json` (gitignored) so re-runs don't re-hit the API. |
 

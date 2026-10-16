@@ -1,6 +1,6 @@
 # Thameswise
 
-On-river distance + trip planner for the non-tidal Thames (Lechlade → Teddington).
+On-river distance + trip planner for the Thames (Lechlade → Tower Bridge).
 Click two spots on a map, see the channel-following distance. Or open "Find trips"
 and the app enumerates put-in / take-out pairs of a given length, optionally with
 a campsite near the take-out and parking at the put-in.
@@ -51,9 +51,14 @@ Copy to share a route; the "Share link" button does this.
 
 ## Scope
 
-- **Non-tidal Thames only** (Lechlade → Teddington Lock, ~234 km, 45 locks).
-  Tidal points (Westminster, Tower Bridge, Putney, etc.) snap with a warning
-  rather than measure into the tideway.
+- **Lechlade → Tower Bridge** (~265 km).
+  The non-tidal reach (Lechlade → Teddington Lock, ~234 km, 45 locks) is the
+  main navigation territory. The tidal reach through central London (Teddington
+  → Tower Bridge, ~31 km) is included: pins snap, measurement works, and
+  bridges/piers/stations/parking in the tideway are tagged. Campsites are
+  effectively non-existent in central London so the dataset is sparse there.
+  Downstream of Tower Bridge is out of scope — commercial traffic makes
+  paddling genuinely unreasonable there.
 - **No live data fetches.** Everything is OGL/ODbL bakeable; the only network
   load at runtime is Leaflet's tile fetch.
 - **No accommodation, no public transport, no booking integration.** v1
@@ -84,3 +89,9 @@ Lock coordinates cross-checked against Environment Agency data (Open Government 
 - The upstream terminus is whatever OSM's westmost `River Thames` endpoint
   resolves to — currently a node around Cricklade, slightly upstream of
   Lechlade. The "0 km" mark in the UI corresponds to that point.
+- OSM tags marina / basin entrance gates (Brentford Dock, Chiswick Quay,
+  Chelsea Harbour, a dock-entrance at Vauxhall) and the River Crane's flood
+  gates with `waterway=lock_gate`, same as real navigation locks. These are
+  explicitly filtered in `scripts/build-launches.mjs` (see `LOCK_REJECT_ZONES`)
+  so they don't pollute `launches.json`. The only real locks in the tidal
+  reach are Teddington's extra gate and Richmond Lock (the half-tide barrage).
